@@ -52,13 +52,13 @@ export default function EditorPage() {
       store.filter !== "none" || (store.bgColor !== "transparent" && store.bgColor !== "#FFFFFF");
   };
 
-  const estimateSize = (canvas: HTMLCanvasElement, format: string, quality: number): string => {
-    try {
-      const dataUrl = canvas.toDataURL(format === "png" ? "image/png" : "image/jpeg", quality);
-      const bytes = Math.round((dataUrl.length - 22) * 3 / 4);
-      return bytes > 1024*1024 ? `${(bytes/1024/1024).toFixed(1)}MB` : `${Math.round(bytes/1024)}KB`;
-    } catch { return "?KB"; }
-  };
+
+
+
+
+
+
+
 
   const handleGrabar = async () => {
     const canvas = editCanvasRef.current;
