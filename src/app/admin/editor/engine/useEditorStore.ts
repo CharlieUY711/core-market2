@@ -11,7 +11,10 @@ export interface EditorState {
   originalDataUrl: string | null;
   originalName: string;
   versionCount: number;
-  bgRemoved: boolean; bgColor: string; aspectRatio: string | null; bgColor: string; aspectRatio: string | null;
+  bgRemoved: boolean;
+  bgColor: string;
+  aspectRatio: string | null;
+  activeTool: string | null;
   history: { label: string; snap: string }[];
   histIdx: number;
 }
@@ -29,7 +32,8 @@ export interface EditorActions {
 const DEFAULTS = {
   brightness:0, contrast:0, exposure:0, saturation:0, temperature:0, tint:0,
   sharpness:0, blur:0, rotation:0, fineRotation:0, flipH:false, flipV:false,
-  zoom:1, filter:"none", bgRemoved:false, bgColor:"transparent", aspectRatio:null, bgColor:"transparent", aspectRatio:null, history:[], histIdx:-1
+  zoom:1, filter:"none", bgRemoved:false, bgColor:"transparent",
+  aspectRatio:null, activeTool:null, history:[], histIdx:-1
 };
 
 export const useEditorStore = create<EditorState & EditorActions>((s, g) => ({
@@ -56,7 +60,7 @@ export const useEditorStore = create<EditorState & EditorActions>((s, g) => ({
       saturation:state.saturation, temperature:state.temperature, tint:state.tint,
       sharpness:state.sharpness, blur:state.blur, rotation:state.rotation,
       fineRotation:state.fineRotation, flipH:state.flipH, flipV:state.flipV,
-      zoom:state.zoom, filter:state.filter
+      zoom:state.zoom, filter:state.filter, bgColor:state.bgColor, aspectRatio:state.aspectRatio
     });
     let hist = state.history.slice(0, state.histIdx + 1);
     hist = [...hist, { label, snap }].slice(-20);
@@ -80,7 +84,7 @@ export const useEditorStore = create<EditorState & EditorActions>((s, g) => ({
   reset: () => {
     s({ brightness:0, contrast:0, exposure:0, saturation:0, temperature:0, tint:0,
         sharpness:0, blur:0, rotation:0, fineRotation:0, flipH:false, flipV:false,
-        zoom:1, filter:"none" });
+        zoom:1, filter:"none", bgColor:"transparent", aspectRatio:null, activeTool:null });
     setTimeout(() => g().saveHistory("Reset"), 0);
   }
 }));
