@@ -1,46 +1,48 @@
-﻿import { DocumentoData, RenderOptions } from "../types";
-import {
-  DEFAULT_EMPRESA, fmtFecha, fmtMonto, qrImgTag,
-  baseStyles, headerBlock, personaBlock, itemsTable, footerBlock, wrapHTML
-} from "../renderers/baseHTML";
+﻿import { DocumentTemplate, RenderContext } from "../types";
+import { baseStyles }      from "../blocks/styles";
+import { blockHeader }     from "../blocks/header";
+import { blockPersona }    from "../blocks/persona";
+import { blockItemsTable } from "../blocks/items";
+import { blockFooter, blockFirma } from "../blocks/footer";
+import { blockQR }         from "../blocks/qr";
+import { wrapHTML }        from "../blocks/wrap";
 
-export function renderRemito(data: DocumentoData, opts: RenderOptions = {}): string {
-  const empresa = { ...DEFAULT_EMPRESA, ...data.empresa };
-  const color   = opts.colorPrimary || empresa.color || "#FF7A00";
-  const fecha   = fmtFecha(data.fecha);
-  const moneda  = data.moneda || "UYU";
+export const remitoTemplate: DocumentTemplate = {
+  tipo:    "remito",
+  label:   "Remito de Entrega",
+  formato: "a4",
+  descripcion: "Constancia de entrega para vendedor y comprador",
 
-  const body = `
-    ${headerBlock(empresa, "Remito de Entrega", data.id, fecha)}
+  render({ data, opts, empresa, color, fecha }: RenderContext): string {
+    const moneda = data.moneda || "UYU";
+    const body = `
+      ${blockHeader(empresa, "Remito de Entrega", data.id, fecha, color)}
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px" class="section">
-      ${personaBlock("Destinatario", data.comprador)}
-      ${personaBlock("Remitente",    data.vendedor)}
-    </div>
-
-    <hr class="divider"/>
-
-    <div class="section">
-      <div class="label">Artículos incluidos</div>
-      ${data.items?.length ? itemsTable(data.items, moneda) : "<div>Ver detalle en ticket de compra.</div>"}
-    </div>
-
-    <hr class="divider"/>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px">
-      <div>
-        <div class="label">Firma receptor</div>
-        <div style="border-bottom:1px solid #333;margin-top:36px;margin-bottom:4px"></div>
-        <div style="font-size:0.78em;color:#888">Aclaración y fecha</div>
+      <div class="doc-grid2 doc-section">
+        ${blockPersona("Destinatario", data.comprador)}
+        ${blockPersona("Remitente",    data.vendedor)}
       </div>
-      <div style="text-align:right">
-        ${data.qrData ? qrImgTag(data.qrData, 75) : ""}
-        <div style="font-size:0.75em;color:#888;margin-top:4px">${data.id.slice(0,14).toUpperCase()}</div>
+
+      <hr class="doc-divider"/>
+
+      <div class="doc-section">
+        <div class="doc-label">Artículos incluidos</div>
+        ${data.items?.length ? blockItemsTable(data.items, moneda) : "<div style='color:#aaa'>Ver ticket de compra.</div>"}
       </div>
-    </div>
 
-    ${footerBlock(empresa)}
-  `;
+      ${data.notas ? `<div class="doc-section"><div class="doc-label">Observaciones</div><div style="font-size:0.85em;color:#555">${data.notas}</div></div>` : ""}
 
-  return wrapHTML("Remito", baseStyles(color, "a4"), body, opts.autoPrint);
-}
+      <hr class="doc-divider"/>
+
+      <div class="doc-grid2" style="margin-top:16px">
+        ${blockFirma("Firma receptor")}
+        <div style="text-align:right">
+          ${data.qrData ? blockQR(data.qrData, data.id, 75) : ""}
+        </div>
+      </div>
+
+      ${blockFooter(empresa)}`;
+
+    return wrapHTML("Remito", baseStyles(color, opts.formato), body, opts.autoPrint);
+  }
+};
