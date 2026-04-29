@@ -179,7 +179,7 @@ export default function TransformPanel() {
             const active = activeAspect === a.label;
             return (
               <button key={a.label}
-                onClick={() => setActiveAspect(active ? null : a.label)}
+                onClick={() => { setActiveAspect(active ? null : a.label); const ratio = a.w > 0 ? `${a.w}:${a.h}` : null; set("aspectRatio", ratio); saveHistory("Aspecto: " + a.label); }}
                 style={{
                   padding:"6px 4px", fontSize:"10px", cursor:"pointer",
                   border:`1.5px solid ${active ? ACCENT : "#E5E7EB"}`,
@@ -200,7 +200,7 @@ export default function TransformPanel() {
         <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:"4px", marginBottom:"8px" }}>
           {BG_COLORS.map(bg => (
             <button key={bg.label} title={bg.label}
-              onClick={() => setActiveBg(activeBg === bg.label ? null : bg.label)}
+              onClick={() => { const c = activeBg === bg.label ? "transparent" : bg.color; setActiveBg(activeBg === bg.label ? null : bg.label); set("bgColor", c); saveHistory("Fondo: " + bg.label); }}
               style={{
                 width:"100%", aspectRatio:"1", borderRadius:"6px", cursor:"pointer",
                 background: bg.color === "transparent" ? "linear-gradient(45deg,#ccc 25%,#fff 25%,#fff 75%,#ccc 75%)" : bg.color,

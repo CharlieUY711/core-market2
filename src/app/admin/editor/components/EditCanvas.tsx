@@ -30,6 +30,11 @@ export default function EditCanvas({ canvasRef, onRender }: Props) {
       c.height = Math.round(rH * scale);
       const ctx = c.getContext("2d")!;
       ctx.clearRect(0, 0, c.width, c.height);
+      // Fondo
+      if (store.bgColor && store.bgColor !== "transparent") {
+        ctx.fillStyle = store.bgColor;
+        ctx.fillRect(0, 0, c.width, c.height);
+      }
       ctx.save();
       ctx.translate(c.width / 2, c.height / 2);
       if (store.flipH) ctx.scale(-1, 1);
