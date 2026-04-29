@@ -50,17 +50,18 @@ export default function EditCanvas({ canvasRef, onRender }: Props) {
   ]);
 
   return (
-    <div ref={wrapRef} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden", padding:"12px" }}>
-      {!store.src ? (
-        <div style={{ color:"#aaa", fontSize:"12px", textAlign:"center" }}>
-          <div style={{ fontSize:"28px", marginBottom:"8px" }}>✏️</div>
+    <div ref={wrapRef} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden", padding:"12px", position:"relative" }}>
+      {/* Canvas SIEMPRE montado — ref disponible desde el inicio */}
+      <canvas
+        ref={canvasRef}
+        style={{ maxWidth:"100%", maxHeight:"100%", objectFit:"contain", borderRadius:"6px", display: store.src ? "block" : "none" }}
+      />
+      {/* Placeholder cuando no hay imagen */}
+      {!store.src && (
+        <div style={{ color:"#bbb", fontSize:"12px", textAlign:"center", position:"absolute" }}>
+          <div style={{ fontSize:"32px", marginBottom:"8px" }}>✏️</div>
           Carga una imagen para editar
         </div>
-      ) : (
-        <canvas
-          ref={canvasRef}
-          style={{ maxWidth:"100%", maxHeight:"100%", objectFit:"contain", borderRadius:"6px" }}
-        />
       )}
     </div>
   );
