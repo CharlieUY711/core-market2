@@ -58,15 +58,15 @@ export default function EditorPage() {
       const { error } = await supabase.storage.from("biblioteca").upload(path, blob, { upsert: true });
       if (error) throw error;
 
-      const { data: { publicUrl } } = supabase.storage.from("biblioteca").getPublicUrl(path);
-
+      const canvasDataUrl = canvas.toDataURL("image/png", 0.92);
       const newImg = new Image();
       newImg.onload = () => {
-        store.bumpVersion(newImg, publicUrl + "?t=" + Date.now());
+        store.bumpVersion(newImg, canvasDataUrl);
         setSaveMsg(`Grabado como ${fileName}`);
         setTimeout(() => setSaveMsg(""), 3000);
       };
-      newImg.src = publicUrl + "?t=" + Date.now();
+      newImg.src = canvasDataUrl;
+
     } catch(e: any) {
       setSaveMsg("Error: " + e.message);
     } finally {
