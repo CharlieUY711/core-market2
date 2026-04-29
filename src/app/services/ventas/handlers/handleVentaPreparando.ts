@@ -2,7 +2,7 @@
 import { generarYSubirDocumento } from "../../documentos/generateDocumentHTML";
 import { DocumentoData }          from "../../documentos/types";
 
-export async function handleVentaEntregada(ventaId: string): Promise<void> {
+export async function handleVentaPreparando(ventaId: string): Promise<void> {
   const { data: venta, error: fetchErr } = await supabase
     .from("ventas")
     .select(`
@@ -14,7 +14,7 @@ export async function handleVentaEntregada(ventaId: string): Promise<void> {
     .eq("id", ventaId)
     .single();
 
-  if (fetchErr || !venta) throw new Error(`[handleVentaEntregada] Venta ${ventaId} no encontrada`);
+  if (fetchErr || !venta) throw new Error(`[handleVentaPreparando] Venta ${ventaId} no encontrada`);
 
   const c = venta.comprador as any;
   const v = venta.vendedor  as any;
@@ -26,7 +26,6 @@ export async function handleVentaEntregada(ventaId: string): Promise<void> {
     moneda:  venta.moneda || "UYU",
     monto:   venta.monto,
     qrData:  `https://market.oddy.com.uy/orden/${ventaId}`,
-    notas:   "Artículo recibido conforme. Gracias por usar ODDY Market.",
     comprador: {
       nombre:    c?.nombre || c?.email || "Comprador",
       direccion: c?.direccion,
@@ -46,35 +45,19 @@ export async function handleVentaEntregada(ventaId: string): Promise<void> {
     }] : [],
   };
 
-  const acuseUrl = await generarYSubirDocumento("acuse_recibo", data, { autoPrint: false });
+  const remitoUrl = await generarYSubirDocumento("remito", data, { autoPrint: false });
 
-  if (!acuseUrl) throw new Error(`[handleVentaEntregada] Error generando acuse para venta ${ventaId}`);
+  if (!remitoUrl) throw new Error(`[handleVentaPreparando] Error generando remito para venta ${ventaId}`);
 
   const { error: updateErr } = await supabase
     .from("ventas")
     .update({
-      acuse_url:    acuseUrl,
-      entregado_en: new Date().toISOString(),
-      cerrado_en:   new Date().toISOString(),
+      remito_url:    remitoUrl,
+      preparando_en: new Date().toISOString(),
     })
     .eq("id", ventaId);
 
-  if (updateErr) throw new Error(`[handleVentaEntregada] Error actualizando venta: ${updateErr.message}`);
+  if (updateErr) throw new Error(`[handleVentaPreparando] Error actualizando venta: ${updateErr.message}`);
 
-  // Disparar review pendiente
-  const { error: reviewErr } = await supabase
-    .from("reviews")
-    .insert({
-      venta_id:     ventaId,
-      comprador_id: c?.id,
-      vendedor_id:  v?.id,
-      articulo_id:  a?.id,
-      status:       "pendiente",
-    });
-
-  if (reviewErr && !reviewErr.message.includes("duplicate")) {
-    console.warn(`[handleVentaEntregada] Review insert warning: ${reviewErr.message}`);
-  }
-
-  console.log(`[handleVentaEntregada] ✓ acuse generado: ${acuseUrl}`);
+  console.log(`[handleVentaPreparando] ✓ remito generado: ${remitoUrl}`);
 }
