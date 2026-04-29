@@ -21,6 +21,7 @@ export default function EditorPage() {
   const [renderCount, setRenderCount] = useState(0);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
+  const [sizeEst, setSizeEst] = useState("");
 
   const navBtn = (t: Tab, label: string, color: string) => (
     <button onClick={() => setTab(t)} style={{
@@ -41,37 +42,63 @@ export default function EditorPage() {
     }}>{label}</button>
   );
 
+  const hasTransformations = (): boolean => {
+    return store.brightness !== 0 || store.contrast !== 0 || store.exposure !== 0 ||
+      store.saturation !== 0 || store.temperature !== 0 || store.tint !== 0 ||
+      store.sharpness !== 0 || store.blur !== 0 || store.rotation !== 0 ||
+      store.fineRotation !== 0 || store.flipH || store.flipV ||
+      store.scaleX !== 1 || store.scaleY !== 1 ||
+      store.offsetX !== 0 || store.offsetY !== 0 ||
+      store.filter !== "none" || (store.bgColor !== "transparent" && store.bgColor !== "#FFFFFF");
+  };
+
+  const estimateSize = (canvas: HTMLCanvasElement, format: string, quality: number): string => {
+    try {
+      const dataUrl = canvas.toDataURL(format === "png" ? "image/png" : "image/jpeg", quality);
+      const bytes = Math.round((dataUrl.length - 22) * 3 / 4);
+      return bytes > 1024*1024 ? `${(bytes/1024/1024).toFixed(1)}MB` : `${Math.round(bytes/1024)}KB`;
+    } catch { return "?KB"; }
+  };
+
   const handleGrabar = async () => {
     const canvas = editCanvasRef.current;
     if (!canvas || !store.src) return;
+    if (!hasTransformations()) {
+      setSaveMsg("Sin cambios — subí imágenes sin editar desde Biblioteca");
+      setTimeout(() => setSaveMsg(""), 3000);
+      return;
+    }
     setSaving(true);
     setSaveMsg("");
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const folder = user?.id || "public";
-      const vNum   = store.versionCount + 1;
+      const folder   = user?.id || "public";
+      const vNum     = store.versionCount + 1;
       const baseName = (store.originalName || "imagen").replace(/\.[^.]+$/, "");
-      const fileName = `${baseName}_V${vNum}.png`;
+      const usePng   = store.bgColor === "transparent";
+      const ext      = usePng ? "png" : "jpg";
+      const mime     = usePng ? "image/png" : "image/jpeg";
+      const quality  = usePng ? 1 : 0.92;
+      const fileName = `${baseName}_V${vNum}.${ext}`;
       const path     = `${folder}/${fileName}`;
-
-      const blob: Blob = await new Promise(res => canvas.toBlob(b => res(b!), "image/png", 0.92));
+      const blob: Blob = await new Promise(res => canvas.toBlob(b => res(b!), mime, quality));
       const { error } = await supabase.storage.from("biblioteca").upload(path, blob, { upsert: true });
       if (error) throw error;
-
-      const canvasDataUrl = canvas.toDataURL("image/png", 0.92);
+      const canvasDataUrl = canvas.toDataURL(mime, quality);
       const newImg = new Image();
       newImg.onload = () => {
         store.bumpVersion(newImg, canvasDataUrl);
-        setSaveMsg(`Grabado como ${fileName}`);
-        setTimeout(() => setSaveMsg(""), 3000);
+        const kb = Math.round(blob.size/1024);
+        setSaveMsg(`✓ ${fileName} · ${kb > 1024 ? (kb/1024).toFixed(1)+"MB" : kb+"KB"}`);
+        setTimeout(() => setSaveMsg(""), 4000);
       };
       newImg.src = canvasDataUrl;
-
     } catch(e: any) {
       setSaveMsg("Error: " + e.message);
     } finally {
       setSaving(false);
     }
+  };
   };
 
   return (
@@ -134,11 +161,11 @@ export default function EditorPage() {
             <span style={{ fontSize:"10px", fontWeight:600, background:ACCENT, color:"#fff", padding:"2px 10px", borderRadius:"20px" }}>Editado</span>
             <span style={{ fontSize:"10px", color:"#9CA3AF" }}>zoom {Math.round(store.zoom*100)}%</span>
           </div>
-          <EditCanvas canvasRef={editCanvasRef} onRender={() => setRenderCount(n => n+1)} />
+          <EditCanvas canvasRef={editCanvasRef} onRender={() => { setRenderCount(n => n+1); const c = editCanvasRef.current; if(c && store.src) { const usePng = store.bgColor === "transparent"; try { const d = c.toDataURL(usePng?"image/png":"image/jpeg", 0.92); const b = Math.round((d.length-22)*3/4); setSizeEst(b>1024*1024?(b/1024/1024).toFixed(1)+"MB":Math.round(b/1024)+"KB"); } catch{} } }} />
           {/* Barra inferior con Grabar */}
           <div style={{ height:"40px", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 10px", borderTop:"1px solid #E5E7EB", background:"#fff", flexShrink:0 }}>
-            <span style={{ fontSize:"10px", color: saveMsg.startsWith("Error") ? "#EF4444" : GREEN }}>
-              {saveMsg || (store.src ? `render #${renderCount}` : "")}
+            <span style={{ fontSize:"10px", color: saveMsg.startsWith("Error") ? "#EF4444" : saveMsg.startsWith("Sin") ? "#F59E0B" : GREEN }}>
+              {saveMsg || (store.src ? `${sizeEst ? sizeEst+" · " : ""}JPG · render #${renderCount}` : "")}
             </span>
             <button
               onClick={handleGrabar}
