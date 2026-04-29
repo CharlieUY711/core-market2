@@ -1,46 +1,7 @@
-﻿import { useEffect, useRef, useCallback } from "react";
-import { useEditorStore } from "../engine/useEditorStore";
+﻿import { useEditorStore } from "../engine/useEditorStore";
 
 export default function OriginalCanvas() {
-  const store     = useEditorStore();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const wrapRef   = useRef<HTMLDivElement>(null);
-
-  const draw = useCallback(() => {
-    const src = store.originalSrc;
-    const c   = canvasRef.current;
-    const w   = wrapRef.current;
-    if (!src || !c || !w) return;
-    const maxW = w.clientWidth  - 24;
-    const maxH = w.clientHeight - 24;
-    if (maxW <= 0 || maxH <= 0) return;
-    const scale = Math.min(maxW / src.width, maxH / src.height, 1);
-    c.width  = Math.round(src.width  * scale);
-    c.height = Math.round(src.height * scale);
-    const ctx = c.getContext("2d")!;
-    ctx.clearRect(0, 0, c.width, c.height);
-    ctx.drawImage(src, 0, 0, c.width, c.height);
-  }, [store.originalSrc]);
-
-  // Dibujar cuando cambia la imagen
-  useEffect(() => {
-    if (!store.originalSrc) return;
-    // Intentar inmediatamente y con delays
-    draw();
-    const t1 = setTimeout(draw, 50);
-    const t2 = setTimeout(draw, 200);
-    const t3 = setTimeout(draw, 500);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-  }, [store.originalSrc, store.versionCount, draw]);
-
-  // ResizeObserver para redibujar si cambia el tamaño
-  useEffect(() => {
-    const w = wrapRef.current;
-    if (!w) return;
-    const ro = new ResizeObserver(() => draw());
-    ro.observe(w);
-    return () => ro.disconnect();
-  }, [draw]);
+  const store = useEditorStore();
 
   const loadFile = (f: File) => {
     const reader = new FileReader();
@@ -52,19 +13,23 @@ export default function OriginalCanvas() {
     reader.readAsDataURL(f);
   };
 
+  const imgSrc = store.originalSrc?.src || null;
+
   return (
-    <div ref={wrapRef}
+    <div
       style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden", padding:"12px", position:"relative" }}
       onDragOver={e => { e.preventDefault(); e.currentTarget.style.outline = "2px dashed #FF7A00"; }}
       onDragLeave={e => { e.currentTarget.style.outline = ""; }}
       onDrop={e => { e.preventDefault(); e.currentTarget.style.outline = ""; const f = e.dataTransfer.files[0]; if (f?.type.startsWith("image/")) loadFile(f); }}
     >
-      <canvas
-        ref={canvasRef}
-        style={{ maxWidth:"100%", maxHeight:"100%", objectFit:"contain", borderRadius:"6px", display: store.originalSrc ? "block" : "none" }}
-      />
-      {!store.originalSrc && (
-        <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:"12px", color:"#888", cursor:"pointer", position:"absolute" }}
+      {imgSrc ? (
+        <img
+          src={imgSrc}
+          alt="original"
+          style={{ maxWidth:"100%", maxHeight:"100%", objectFit:"contain", borderRadius:"6px", display:"block" }}
+        />
+      ) : (
+        <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:"12px", color:"#888", cursor:"pointer" }}
           onClick={() => document.getElementById("emi-file-input")?.click()}>
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="1.5">
             <rect x="3" y="3" width="18" height="18" rx="3"/>
@@ -80,7 +45,7 @@ export default function OriginalCanvas() {
           </button>
         </div>
       )}
-      {store.versionCount > 0 && (
+      {store.versionCount > 0 && imgSrc && (
         <div style={{ position:"absolute", top:"8px", right:"8px", background:"#1DC878", color:"#fff", fontSize:"10px", fontWeight:700, padding:"2px 8px", borderRadius:"20px" }}>
           V{store.versionCount}
         </div>
