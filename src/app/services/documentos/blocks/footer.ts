@@ -5,7 +5,7 @@ export function blockFooter(empresa: EmpresaConfig): string {
   return `
     <div class="doc-footer">
       ${parts.join(" · ")}<br/>
-      Documento generado el ${new Date().toLocaleDateString("es-UY")} — market.oddy.com.uy
+      Documento generado el ${new Date().toLocaleDateString("es-UY")} — charliemarket.com.uy
     </div>`;
 }
 

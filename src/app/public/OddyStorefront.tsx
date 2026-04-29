@@ -2313,7 +2313,7 @@ export default function OddyStorefront() {
     }
   }, [openDropdown]);
 
-  // Ajustar el tamaño de "Market" para que tenga el mismo ancho que "ODDY"
+  // Ajustar el tamaño de "Market" para que tenga el mismo ancho que "Charlie Market"
   useEffect(() => {
     const oddyEl = document.getElementById('oddy-text');
     const marketEl = document.getElementById('market-text');
@@ -2364,7 +2364,7 @@ export default function OddyStorefront() {
     setTimeout(() => {
       setMode(prev => {
         const next = prev === 'mkt' ? 'sh' : 'mkt';
-        setFlashText(next === 'sh' ? 'SEGUNDA MANO' : 'ODDY MARKET');
+        setFlashText(next === 'sh' ? 'SEGUNDA MANO' : 'Charlie Market');
         return next;
       });
       if (!silent) setTimeout(() => setFlash(false), 500);

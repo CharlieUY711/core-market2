@@ -107,7 +107,7 @@ export default function AdminLayout() {
         <div style={{ padding:"0 1.5rem", height:"70px", display:"flex", alignItems:"center" }}>
           <Link to="/" style={{ textDecoration:"none", display:"flex", alignItems:"center" }}>
             <div style={{ color: ACCENT, fontWeight:900, fontSize:"1.75rem", letterSpacing:"-0.03em", lineHeight:1 }}>
-              ODDY Panel
+              Charlie Market
             </div>
           </Link>
         </div>

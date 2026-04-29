@@ -15,7 +15,7 @@ export const etiquetaEnvioTemplate: DocumentTemplate = {
     const v    = data.vendedor;
     const item = data.items?.[0];
     const sid  = shortId(data.id);
-    const qr   = data.qrData || `https://market.oddy.com.uy/orden/${data.id}`;
+    const qr   = data.qrData || `https://charliemarket.com.uy/orden/${data.id}`;
 
     const body = `
       <div style="border:2px solid #000;padding:4mm;height:calc(100vh - 12mm);display:flex;flex-direction:column">

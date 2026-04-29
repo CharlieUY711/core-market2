@@ -1,9 +1,9 @@
 ﻿import { EmpresaConfig } from "../types";
 
 export const DEFAULT_EMPRESA: EmpresaConfig = {
-  nombre:    "ODDY Market",
+  nombre:    "Charlie Market",
   color:     "#FF7A00",
-  web:       "market.oddy.com.uy",
+  web:       "charliemarket.com.uy",
   email:     "soporte@oddy.com.uy",
 };
 
@@ -114,7 +114,7 @@ export function footerBlock(empresa: EmpresaConfig): string {
   return `
     <div class="footer">
       ${empresa.nombre} · ${empresa.email||""} · ${empresa.telefono||""}<br/>
-      Documento generado el ${fmtFecha()} — market.oddy.com.uy
+      Documento generado el ${fmtFecha()} — charliemarket.com.uy
     </div>`;
 }
 

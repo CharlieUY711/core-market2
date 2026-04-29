@@ -119,10 +119,10 @@ export default function AdminArticulos() {
         published_date:      publicarComo === "active" ? new Date().toISOString() : null,
       });
       if (error) throw error;
-      notify(publicarComo === "draft" ? "✅ Guardado como borrador" : "✅ Artículo publicado");
+      notify(publicarComo === "draft" ? "Guardado como borrador — podés publicarlo cuando quieras" : "¡Listo! Tu artículo ya está publicado en Charlie Market");
       setTimeout(() => navigate("/admin/catalog"), 1500);
     } catch (e: any) {
-      notify(e.message || "Error al guardar", false);
+      notify(e.message || "Algo salió mal. Intentá de nuevo en un momento", false);
     } finally {
       setLoading(false);
     }

@@ -25,8 +25,8 @@ export async function handleVentaEntregada(ventaId: string): Promise<void> {
     fecha:   new Date().toISOString(),
     moneda:  venta.moneda || "UYU",
     monto:   venta.monto,
-    qrData:  `https://market.oddy.com.uy/orden/${ventaId}`,
-    notas:   "Artículo recibido conforme. Gracias por usar ODDY Market.",
+    qrData:  `https://charliemarket.com.uy/orden/${ventaId}`,
+    notas:   "Artículo recibido conforme. Gracias por usar Charlie Market.",
     comprador: {
       nombre:    c?.nombre || c?.email || "Comprador",
       direccion: c?.direccion,

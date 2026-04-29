@@ -26,7 +26,7 @@ export async function handleVentaEnviada(ventaId: string): Promise<void> {
     moneda:       venta.moneda || "UYU",
     monto:        venta.monto,
     trackingCode: (venta as any).tracking_code,
-    qrData:       `https://market.oddy.com.uy/orden/${ventaId}__${c?.id || ""}`,
+    qrData:       `https://charliemarket.com.uy/orden/${ventaId}__${c?.id || ""}`,
     comprador: {
       nombre:    c?.nombre || c?.email || "Comprador",
       direccion: c?.direccion || "Sin dirección",
