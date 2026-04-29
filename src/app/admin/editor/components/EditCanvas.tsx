@@ -133,27 +133,7 @@ export default function EditCanvas({ canvasRef, onRender }: Props) {
       ctx.restore();
       if (store.aspectRatio === "circle") ctx.restore();
 
-      // Handles de transformación
-      if (zone) {
-        ctx.strokeStyle = "#FF7A00"; ctx.lineWidth = 1.5;
-        ctx.setLineDash([4,3]);
-        ctx.strokeRect(4, 4, c.width-8, c.height-8);
-        ctx.setLineDash([]);
-        [[0,0],[0.5,0],[1,0],[0,0.5],[1,0.5],[0,1],[0.5,1],[1,1]].forEach(([hx,hy]) => {
-          ctx.fillStyle = (hx===0||hx===1)&&(hy===0||hy===1) ? "#FF7A00" : "#fff";
-          ctx.strokeStyle = "#FF7A00"; ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.rect(4+hx*(c.width-12)-4, 4+hy*(c.height-12)-4, 8, 8);
-          ctx.fill(); ctx.stroke();
-        });
-      }
 
-      // Overlay selección
-      if (store.activeTool === "select-rect") {
-        ctx.strokeStyle="#FF7A00"; ctx.lineWidth=1.5; ctx.setLineDash([5,3]);
-        ctx.strokeRect(c.width*0.15, c.height*0.15, c.width*0.7, c.height*0.7);
-        ctx.setLineDash([]);
-      }
       if (store.activeTool === "select-circ") {
         ctx.strokeStyle="#FF7A00"; ctx.lineWidth=1.5; ctx.setLineDash([5,3]);
         ctx.beginPath();
