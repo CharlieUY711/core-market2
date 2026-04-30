@@ -168,6 +168,46 @@ export default function AdminMisPublicaciones() {
         </span>
       </div>
 
+      {/* Canales de venta */}
+      <div style={{ background:"#fff", borderRadius:12, border:"1px solid #F3F4F6",
+        padding:"1rem 1.25rem" }}>
+        <div style={{ fontSize:"0.8rem", fontWeight:700, color:"#6B7280",
+          textTransform:"uppercase", letterSpacing:".06em", marginBottom:"0.75rem" }}>
+          Sincronizar canales
+        </div>
+        <div style={{ display:"flex", gap:"0.75rem", flexWrap:"wrap" }}>
+          {[
+            { id:"ml",   label:"MercadoLibre", icon:"🟡", color:"#FFE600", textColor:"#333",
+              available:true,  desc:"Publicar en ML" },
+            { id:"meta", label:"Meta / Instagram", icon:"🔵", color:"#1877F2", textColor:"#fff",
+              available:false, desc:"Próximamente" },
+            { id:"wa",   label:"WhatsApp",  icon:"🟢", color:"#25D366", textColor:"#fff",
+              available:false, desc:"Próximamente" },
+          ].map(canal => (
+            <button key={canal.id}
+              disabled={!canal.available}
+              onClick={() => canal.available && navigate("/admin/mercadolibre")}
+              title={canal.desc}
+              style={{
+                display:"flex", alignItems:"center", gap:"0.5rem",
+                padding:"0.5rem 1rem", borderRadius:8, cursor: canal.available ? "pointer" : "not-allowed",
+                border:`1.5px solid ${canal.available ? canal.color : "#E5E7EB"}`,
+                background: canal.available ? canal.color : "#F9FAFB",
+                color: canal.available ? canal.textColor : "#9CA3AF",
+                fontWeight:700, fontSize:"0.82rem", opacity: canal.available ? 1 : 0.6,
+                transition:"all .15s",
+              }}>
+              <span>{canal.icon}</span>
+              <span>{canal.label}</span>
+              {!canal.available && (
+                <span style={{ fontSize:"9px", background:"rgba(0,0,0,.1)",
+                  padding:"1px 5px", borderRadius:10 }}>Próximo</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Lista */}
       {loading ? (
         <div style={{ textAlign: "center", padding: "3rem", color: "#9CA3AF" }}>Cargando...</div>
