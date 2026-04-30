@@ -42,20 +42,20 @@ const STATUS_CFG: Record<string, { label: string; bg: string; color: string }> =
   draft:    { label: "Borrador", bg: "#F3F4F6", color: "#6B7280" },
   paused:   { label: "Pausado",  bg: "#fef9c3", color: "#854d0e" },
   inactive: { label: "Inactivo", bg: "#fee2e2", color: "#991b1b" },
-  deleted:  { label: "Eliminado",bg: "#fee2e2", color: "#991b1b" },
 };
 
 const ALL_COLS = [
-  { id:"depto",     label:"Departamento" },
   { id:"categoria", label:"Categoría" },
   { id:"marca",     label:"Marca" },
   { id:"ranking",   label:"Ranking" },
   { id:"ctr",       label:"CTR" },
-  { id:"alta",      label:"Fecha alta" },
-  { id:"baja",      label:"Baja prevista" },
-  { id:"mkt1",      label:"MKT Acción 1" },
-  { id:"mkt2",      label:"MKT Acción 2" },
+  { id:"baja",      label:"Baja" },
+  { id:"mkt1",      label:"MKT 1" },
+  { id:"mkt2",      label:"MKT 2" },
 ];
+
+type SortKey = "precio"|"stock"|"status"|"tipo"|"alta"|null;
+type SortDir = "asc"|"desc";
 
 function fmtFecha(s?: string) {
   if (!s) return "—";
@@ -68,13 +68,17 @@ function fmtPrecio(n: number, moneda = "UYU") {
 
 export default function AdminPublicaciones() {
   const navigate = useNavigate();
-  const [articulos, setArticulos] = useState<Articulo[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [selected, setSelected]   = useState<Set<string>>(new Set());
-  const [expanded, setExpanded]   = useState<Set<string>>(new Set());
-  const [filterTipo, setFilterTipo]     = useState<"all"|"market"|"secondhand">("all");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [visibleCols, setVisibleCols]   = useState<Set<string>>(new Set(["depto","alta","baja"]));
+  const [articulos, setArticulos]   = useState<Articulo[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [selected, setSelected]     = useState<Set<string>>(new Set());
+  const [expanded, setExpanded]     = useState<Set<string>>(new Set());
+  const [editing,  setEditing]      = useState<string|null>(null);
+  const [editForm, setEditForm]     = useState<Partial<Articulo>>({});
+  const [isSH, setIsSH]             = useState(false);
+  const [sortKey, setSortKey]       = useState<SortKey>(null);
+  const [sortDir, setSortDir]       = useState<SortDir>("asc");
+  const [filterStatus, setFilterStatus] = useState<string|null>(null);
+  const [visibleCols, setVisibleCols]   = useState<Set<string>>(new Set(["alta"]));
   const [showColPicker, setShowColPicker] = useState(false);
   const [toast, setToast] = useState<{text:string;ok:boolean}|null>(null);
 
@@ -98,78 +102,148 @@ export default function AdminPublicaciones() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Ordenar por header
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortKey(key); setSortDir("asc"); }
+  };
+
+  // Ciclar filtro status al hacer click en header Estado
+  const cycleStatus = () => {
+    const opts = [null, "active", "draft", "paused"];
+    const idx = opts.indexOf(filterStatus);
+    setFilterStatus(opts[(idx+1)%opts.length]);
+  };
+
   // Selección
   const toggleAll = () => {
     if (selected.size === filtered.length) setSelected(new Set());
     else setSelected(new Set(filtered.map(a => a.id)));
   };
   const toggleOne = (id: string) => {
-    setSelected(prev => {
-      const n = new Set(prev);
-      n.has(id) ? n.delete(id) : n.add(id);
-      return n;
-    });
+    setSelected(prev => { const n = new Set(prev); n.has(id)?n.delete(id):n.add(id); return n; });
   };
   const toggleExpand = (id: string) => {
-    setExpanded(prev => {
-      const n = new Set(prev);
-      n.has(id) ? n.delete(id) : n.add(id);
-      return n;
-    });
+    setExpanded(prev => { const n = new Set(prev); n.has(id)?n.delete(id):n.add(id); return n; });
+    setEditing(null);
   };
 
-  // Acciones individuales
+  // Edición inline
+  const startEdit = (a: Articulo) => {
+    setEditForm({ nombre:a.nombre, descripcion:a.descripcion, precio:a.precio,
+      precio_original:a.precio_original, stock:a.stock, condicion:a.condicion,
+      departamento_nombre:a.departamento_nombre });
+    setEditing(a.id);
+  };
+  const saveEdit = async (id: string) => {
+    const { error } = await supabase.from("articulos").update(editForm).eq("id", id);
+    if (!error) {
+      setArticulos(prev => prev.map(a => a.id===id ? {...a,...editForm} : a));
+      notify("Guardado");
+    } else notify(error.message, false);
+    setEditing(null);
+  };
+
+  // Acciones
   const cambiarStatus = async (id: string, status: string) => {
     await supabase.from("articulos").update({ status }).eq("id", id);
-    setArticulos(prev => prev.map(a => a.id === id ? {...a, status} : a));
+    setArticulos(prev => prev.map(a => a.id===id ? {...a,status} : a));
     notify("Estado actualizado");
+  };
+
+  const clonar = async (a: Articulo) => {
+    const { id, created_at, published_at, ...rest } = a;
+    const { error } = await supabase.from("articulos").insert({
+      ...rest, nombre: a.nombre + " (copia)", status:"draft",
+      impresiones:0, clicks:0, ventas_count:0, ranking_score:0,
+    });
+    if (!error) { notify("Artículo clonado como borrador"); load(); }
+    else notify(error.message, false);
+  };
+
+  const archivar = async (id: string) => {
+    await supabase.from("articulos").update({ status:"inactive" }).eq("id", id);
+    setArticulos(prev => prev.map(a => a.id===id ? {...a,status:"inactive"} : a));
+    notify("Archivado");
   };
 
   const eliminar = async (id: string) => {
     if (!confirm("¿Eliminar este artículo?")) return;
-    await supabase.from("articulos").update({ deleted_at: new Date().toISOString(), status:"deleted" }).eq("id", id);
-    setArticulos(prev => prev.filter(a => a.id !== id));
+    await supabase.from("articulos").update({ deleted_at:new Date().toISOString(), status:"deleted" }).eq("id", id);
+    setArticulos(prev => prev.filter(a => a.id!==id));
     notify("Eliminado");
   };
 
-  // Acciones por lote
+  // Lote
   const accionLote = async (accion: string) => {
     const ids = Array.from(selected);
     if (!ids.length) return;
-    if (accion === "activar")  await supabase.from("articulos").update({ status:"active"  }).in("id", ids);
-    if (accion === "pausar")   await supabase.from("articulos").update({ status:"paused"  }).in("id", ids);
-    if (accion === "eliminar") {
-      if (!confirm(`¿Eliminar ${ids.length} artículo(s)?`)) return;
-      await supabase.from("articulos").update({ deleted_at: new Date().toISOString(), status:"deleted" }).in("id", ids);
+    if (accion==="activar")  await supabase.from("articulos").update({status:"active"}).in("id",ids);
+    if (accion==="pausar")   await supabase.from("articulos").update({status:"paused"}).in("id",ids);
+    if (accion==="archivar") await supabase.from("articulos").update({status:"inactive"}).in("id",ids);
+    if (accion==="eliminar") {
+      if (!confirm("¿Eliminar "+ids.length+" artículo(s)?")) return;
+      await supabase.from("articulos").update({deleted_at:new Date().toISOString(),status:"deleted"}).in("id",ids);
     }
-    notify("Acción aplicada a " + ids.length + " artículo(s)");
-    setSelected(new Set());
-    load();
+    notify("Acción aplicada a "+ids.length+" artículo(s)");
+    setSelected(new Set()); load();
   };
 
-  const filtered = articulos.filter(a => {
-    if (filterTipo !== "all" && a.tipo !== filterTipo) return false;
-    if (filterStatus !== "all" && a.status !== filterStatus) return false;
+  // Filtrar y ordenar
+  let filtered = articulos.filter(a => {
+    if (isSH && a.tipo !== "secondhand") return false;
+    if (!isSH && a.tipo !== "market") return false;
+    if (filterStatus && a.status !== filterStatus) return false;
     return true;
   });
 
+  if (sortKey) {
+    filtered = [...filtered].sort((a,b) => {
+      let va: any, vb: any;
+      if (sortKey==="precio") { va=a.precio; vb=b.precio; }
+      else if (sortKey==="stock") { va=a.stock; vb=b.stock; }
+      else if (sortKey==="status") { va=a.status; vb=b.status; }
+      else if (sortKey==="alta") { va=a.published_at||a.created_at; vb=b.published_at||b.created_at; }
+      else { va=a.tipo; vb=b.tipo; }
+      if (va<vb) return sortDir==="asc"?-1:1;
+      if (va>vb) return sortDir==="asc"?1:-1;
+      return 0;
+    });
+  }
+
   const stats = {
     total:   articulos.length,
-    activos: articulos.filter(a => a.status==="active").length,
-    borradores: articulos.filter(a => a.status==="draft").length,
-    clicks:  articulos.reduce((s,a) => s+(a.clicks||0), 0),
+    activos: articulos.filter(a=>a.status==="active").length,
+    borradores: articulos.filter(a=>a.status==="draft").length,
+    clicks:  articulos.reduce((s,a)=>s+(a.clicks||0),0),
   };
 
-  const thStyle: React.CSSProperties = {
+  const color = isSH ? GREEN : ACCENT;
+
+  // Estilos
+  const thBase: React.CSSProperties = {
     padding:"0.5rem 0.75rem", textAlign:"left", fontSize:"11px",
     fontWeight:700, color:"#6B7280", textTransform:"uppercase",
     letterSpacing:".05em", borderBottom:"2px solid #F3F4F6",
-    background:"#FAFAFA", whiteSpace:"nowrap",
+    background:"#FAFAFA", whiteSpace:"nowrap", userSelect:"none",
   };
-  const tdStyle: React.CSSProperties = {
-    padding:"0.6rem 0.75rem", fontSize:"0.82rem", color:"#374151",
+  const thSort = (key: SortKey): React.CSSProperties => ({
+    ...thBase, cursor:"pointer",
+    color: sortKey===key ? color : "#6B7280",
+  });
+  const td: React.CSSProperties = {
+    padding:"0.55rem 0.75rem", fontSize:"0.82rem", color:"#374151",
     borderBottom:"1px solid #F9FAFB", verticalAlign:"middle",
   };
+  const sortIco = (key: SortKey) =>
+    sortKey===key ? (sortDir==="asc"?" ↑":" ↓") : " ↕";
+
+  const inpStyle: React.CSSProperties = {
+    width:"100%", padding:"0.4rem 0.6rem", border:"1.5px solid #E5E7EB",
+    borderRadius:6, fontSize:"0.82rem", outline:"none", fontFamily:"DM Sans,sans-serif",
+  };
+
+  const actionBtn = (label: string, onClick: ()=>void, bg: string, color2: string, border?: string): React.CSSProperties => ({});
 
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:"1rem" }}>
@@ -177,8 +251,7 @@ export default function AdminPublicaciones() {
       {toast && (
         <div style={{ position:"fixed", bottom:"1.5rem", right:"1.5rem", zIndex:9999,
           padding:"0.75rem 1.25rem", borderRadius:10, fontWeight:600, fontSize:"0.875rem",
-          background: toast.ok?"#f0fdf4":"#fef2f2",
-          color: toast.ok?"#166534":"#dc2626",
+          background:toast.ok?"#f0fdf4":"#fef2f2", color:toast.ok?"#166534":"#dc2626",
           border:`1px solid ${toast.ok?"#6BB87A":"#ef4444"}`,
           boxShadow:"0 4px 16px rgba(0,0,0,0.1)" }}>
           {toast.text}
@@ -190,88 +263,73 @@ export default function AdminPublicaciones() {
         <div>
           <h1 style={{ fontSize:"1.25rem", fontWeight:800, color:"#111", margin:0 }}>Mis Publicaciones</h1>
           <p style={{ fontSize:"0.8rem", color:"#6B7280", margin:"2px 0 0" }}>
-            Market y Second Hand · {articulos.length} artículos
+            {isSH ? "♻️ Second Hand" : "🛍 Market"} · {filtered.length} artículos
           </p>
         </div>
-        <button onClick={() => navigate("/admin/catalog/articulos")} style={{
-          padding:"0.6rem 1.25rem", background:ACCENT, color:"#fff",
-          border:"none", borderRadius:10, fontWeight:700, fontSize:"0.875rem", cursor:"pointer",
-        }}>+ Nuevo artículo</button>
+        <div style={{ display:"flex", gap:"0.75rem", alignItems:"center" }}>
+          {/* Toggle MKT/SH */}
+          <button
+            onMouseDown={() => setIsSH(true)}
+            onMouseUp={() => setIsSH(false)}
+            onMouseLeave={() => setIsSH(false)}
+            onTouchStart={() => setIsSH(true)}
+            onTouchEnd={() => setIsSH(false)}
+            style={{
+              padding:"0.6rem 1.25rem", border:"none", borderRadius:10,
+              fontWeight:700, fontSize:"0.875rem", cursor:"pointer",
+              background: isSH ? GREEN : "#F3F4F6",
+              color: isSH ? "#fff" : "#6B7280",
+              transition:"all .15s",
+            }}>
+            {isSH ? "♻️ Second Hand" : "🛍 Market"}
+          </button>
+          {/* Nuevo artículo */}
+          <button onClick={() => navigate("/admin/catalog/articulos")} style={{
+            padding:"0.6rem 1.25rem", background:color, color:"#fff",
+            border:"none", borderRadius:10, fontWeight:700, fontSize:"0.875rem",
+            cursor:"pointer", transition:"background .15s",
+          }}>+ Nuevo artículo</button>
+        </div>
       </div>
 
       {/* Stats */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"0.6rem" }}>
         {[
-          { label:"Total",      value:stats.total,      color:BLUE   },
-          { label:"Activos",    value:stats.activos,    color:GREEN  },
-          { label:"Borradores", value:stats.borradores, color:"#F59E0B" },
-          { label:"Clicks",     value:stats.clicks,     color:ACCENT },
+          { label:"Total",      value:stats.total,      c:BLUE   },
+          { label:"Activos",    value:stats.activos,    c:GREEN  },
+          { label:"Borradores", value:stats.borradores, c:"#F59E0B" },
+          { label:"Clicks",     value:stats.clicks,     c:color  },
         ].map(s => (
           <div key={s.label} style={{ background:"#fff", borderRadius:10, padding:"0.75rem 1rem",
-            border:"1px solid #F3F4F6", borderLeft:`3px solid ${s.color}` }}>
-            <div style={{ fontSize:"1.4rem", fontWeight:800, color:s.color }}>{s.value}</div>
+            border:"1px solid #F3F4F6", borderLeft:`3px solid ${s.c}` }}>
+            <div style={{ fontSize:"1.4rem", fontWeight:800, color:s.c }}>{s.value}</div>
             <div style={{ fontSize:"0.72rem", color:"#6B7280" }}>{s.label}</div>
           </div>
         ))}
       </div>
 
-      {/* Barra de herramientas */}
-      <div style={{ display:"flex", gap:"0.5rem", flexWrap:"wrap", alignItems:"center" }}>
-
-        {/* Filtros tipo */}
-        <div style={{ display:"flex", gap:"3px" }}>
-          {(["all","market","secondhand"] as const).map(f => (
-            <button key={f} onClick={() => setFilterTipo(f)} style={{
-              padding:"0.35rem 0.7rem", borderRadius:7, fontSize:"0.78rem",
-              border:`1.5px solid ${filterTipo===f?ACCENT:"#E5E7EB"}`,
-              background: filterTipo===f?"rgba(255,122,0,.08)":"#fff",
-              color: filterTipo===f?ACCENT:"#6B7280",
-              fontWeight: filterTipo===f?700:400, cursor:"pointer",
-            }}>
-              {f==="all"?"Todos":f==="market"?"🛍 Market":"♻️ SH"}
-            </button>
-          ))}
-        </div>
-
-        {/* Filtros status */}
-        <div style={{ display:"flex", gap:"3px" }}>
-          {["all","active","draft","paused"].map(f => (
-            <button key={f} onClick={() => setFilterStatus(f)} style={{
-              padding:"0.35rem 0.7rem", borderRadius:7, fontSize:"0.78rem",
-              border:`1.5px solid ${filterStatus===f?BLUE:"#E5E7EB"}`,
-              background: filterStatus===f?"rgba(15,52,96,.08)":"#fff",
-              color: filterStatus===f?BLUE:"#6B7280",
-              fontWeight: filterStatus===f?700:400, cursor:"pointer",
-            }}>
-              {f==="all"?"Todos":STATUS_CFG[f]?.label||f}
-            </button>
-          ))}
-        </div>
-
-        {/* Acciones lote */}
+      {/* Barra acciones lote + columnas */}
+      <div style={{ display:"flex", gap:"0.5rem", alignItems:"center" }}>
         {selected.size > 0 && (
-          <div style={{ display:"flex", gap:"4px", marginLeft:"0.5rem",
-            padding:"0.3rem 0.75rem", background:"rgba(15,52,96,.06)",
-            borderRadius:8, border:`1px solid ${BLUE}` }}>
+          <div style={{ display:"flex", gap:"4px", padding:"0.3rem 0.75rem",
+            background:"rgba(15,52,96,.06)", borderRadius:8, border:`1px solid ${BLUE}` }}>
             <span style={{ fontSize:"0.78rem", color:BLUE, fontWeight:700, marginRight:"4px" }}>
               {selected.size} sel.
             </span>
             {[
-              { id:"activar", label:"✓ Activar",    color:GREEN  },
-              { id:"pausar",  label:"⏸ Pausar",     color:"#F59E0B" },
-              { id:"ml",      label:"🟡 Sync ML",   color:"#FFE600" },
-              { id:"eliminar",label:"🗑 Eliminar",  color:"#EF4444" },
+              { id:"activar",  label:"✓ Activar",  c:GREEN },
+              { id:"pausar",   label:"⏸ Pausar",   c:"#F59E0B" },
+              { id:"archivar", label:"📦 Archivar", c:"#6B7280" },
+              { id:"eliminar", label:"🗑 Eliminar", c:"#EF4444" },
             ].map(ac => (
               <button key={ac.id} onClick={() => accionLote(ac.id)} style={{
                 padding:"0.25rem 0.6rem", fontSize:"0.75rem", fontWeight:600,
-                border:`1px solid ${ac.color}`, borderRadius:6,
-                background:"#fff", color:ac.id==="ml"?"#333":ac.color, cursor:"pointer",
+                border:`1px solid ${ac.c}`, borderRadius:6,
+                background:"#fff", color:ac.c, cursor:"pointer",
               }}>{ac.label}</button>
             ))}
           </div>
         )}
-
-        {/* Selector columnas */}
         <div style={{ marginLeft:"auto", position:"relative" }}>
           <button onClick={() => setShowColPicker(p=>!p)} style={{
             padding:"0.35rem 0.75rem", border:"1.5px solid #E5E7EB",
@@ -281,22 +339,17 @@ export default function AdminPublicaciones() {
           {showColPicker && (
             <div style={{ position:"absolute", right:0, top:"110%", background:"#fff",
               border:"1.5px solid #E5E7EB", borderRadius:10, padding:"0.75rem",
-              zIndex:100, minWidth:180, boxShadow:"0 4px 16px rgba(0,0,0,.1)" }}>
-              <div style={{ fontSize:"0.75rem", fontWeight:700, color:"#6B7280", marginBottom:"0.5rem" }}>
-                Columnas opcionales
-              </div>
+              zIndex:100, minWidth:180, boxShadow:"0 4px 16px rgba(0,0,0,.1)" }}
+              onMouseLeave={() => setShowColPicker(false)}>
               {ALL_COLS.map(col => (
                 <label key={col.id} style={{ display:"flex", alignItems:"center", gap:"0.5rem",
-                  padding:"0.25rem 0", cursor:"pointer", fontSize:"0.82rem", color:"#374151" }}>
-                  <input type="checkbox"
-                    checked={visibleCols.has(col.id)}
+                  padding:"0.25rem 0", cursor:"pointer", fontSize:"0.82rem" }}>
+                  <input type="checkbox" checked={visibleCols.has(col.id)}
+                    style={{ accentColor:color }}
                     onChange={() => setVisibleCols(prev => {
                       const n = new Set(prev);
-                      n.has(col.id) ? n.delete(col.id) : n.add(col.id);
-                      return n;
-                    })}
-                    style={{ accentColor:ACCENT }}
-                  />
+                      n.has(col.id)?n.delete(col.id):n.add(col.id); return n;
+                    })} />
                   {col.label}
                 </label>
               ))}
@@ -314,67 +367,68 @@ export default function AdminPublicaciones() {
           <div style={{ textAlign:"center", padding:"3rem" }}>
             <div style={{ fontSize:"3rem" }}>📦</div>
             <div style={{ fontWeight:700, color:"#374151", marginTop:"0.5rem" }}>Sin publicaciones</div>
-            <div style={{ color:"#9CA3AF", fontSize:"0.875rem", marginTop:"0.25rem" }}>
-              Publicá tu primer artículo
-            </div>
+            <button onClick={() => navigate("/admin/catalog/articulos")} style={{
+              marginTop:"1rem", padding:"0.6rem 1.25rem", background:color, color:"#fff",
+              border:"none", borderRadius:8, fontWeight:700, cursor:"pointer",
+            }}>+ Nuevo artículo</button>
           </div>
         ) : (
           <table style={{ width:"100%", borderCollapse:"collapse", minWidth:700 }}>
             <thead>
               <tr>
-                <th style={{ ...thStyle, width:36 }}>
+                <th style={{ ...thBase, width:36 }}>
                   <input type="checkbox"
                     checked={selected.size===filtered.length && filtered.length>0}
-                    onChange={toggleAll}
-                    style={{ accentColor:ACCENT }}
-                  />
+                    onChange={toggleAll} style={{ accentColor:color }} />
                 </th>
-                <th style={{ ...thStyle, width:52 }}>Foto</th>
-                <th style={thStyle}>Nombre</th>
-                <th style={{ ...thStyle, width:70 }}>Tipo</th>
-                <th style={{ ...thStyle, width:100 }}>Precio</th>
-                <th style={{ ...thStyle, width:60 }}>Stock</th>
-                <th style={{ ...thStyle, width:90 }}>Estado</th>
-                <th style={{ ...thStyle, width:90, textAlign:"center" }}>Sync</th>
-                {visibleCols.has("depto")     && <th style={thStyle}>Departamento</th>}
-                {visibleCols.has("categoria") && <th style={thStyle}>Categoría</th>}
-                {visibleCols.has("marca")     && <th style={thStyle}>Marca</th>}
-                {visibleCols.has("ranking")   && <th style={{ ...thStyle, width:75 }}>Ranking</th>}
-                {visibleCols.has("ctr")       && <th style={{ ...thStyle, width:60 }}>CTR</th>}
-                {visibleCols.has("alta")      && <th style={{ ...thStyle, width:80 }}>Alta</th>}
-                {visibleCols.has("baja")      && <th style={{ ...thStyle, width:80 }}>Baja</th>}
-                {visibleCols.has("mkt1")      && <th style={{ ...thStyle, width:90 }}>MKT 1</th>}
-                {visibleCols.has("mkt2")      && <th style={{ ...thStyle, width:90 }}>MKT 2</th>}
-                <th style={{ ...thStyle, width:36 }}></th>
+                <th style={{ ...thBase, width:52 }}>Foto</th>
+                <th style={thBase}>Nombre</th>
+                <th style={thSort("precio")} onClick={()=>handleSort("precio")}>
+                  Precio{sortIco("precio")}
+                </th>
+                <th style={thSort("stock")} onClick={()=>handleSort("stock")}>
+                  Stock{sortIco("stock")}
+                </th>
+                <th style={{ ...thSort("status"), cursor:"pointer" }} onClick={cycleStatus}>
+                  Estado {filterStatus ? "· "+STATUS_CFG[filterStatus]?.label : "↕"}
+                </th>
+                <th style={{ ...thBase, textAlign:"center" }}>Sync</th>
+                <th style={{ ...thBase }}>Departamento</th>
+                <th style={thSort("alta")} onClick={()=>handleSort("alta")}>
+                  Alta{sortIco("alta")}
+                </th>
+                {visibleCols.has("categoria") && <th style={thBase}>Categoría</th>}
+                {visibleCols.has("marca")     && <th style={thBase}>Marca</th>}
+                {visibleCols.has("ranking")   && <th style={thBase}>Ranking</th>}
+                {visibleCols.has("ctr")       && <th style={thBase}>CTR</th>}
+                {visibleCols.has("baja")      && <th style={thBase}>Baja</th>}
+                {visibleCols.has("mkt1")      && <th style={thBase}>MKT 1</th>}
+                {visibleCols.has("mkt2")      && <th style={thBase}>MKT 2</th>}
+                <th style={{ ...thBase, width:36 }}></th>
               </tr>
             </thead>
             <tbody>
               {filtered.map(a => {
-                const cfg = STATUS_CFG[a.status] || STATUS_CFG.draft;
+                const cfg  = STATUS_CFG[a.status] || STATUS_CFG.draft;
                 const isExp = expanded.has(a.id);
                 const isSel = selected.has(a.id);
-                const ctr = a.impresiones ? Math.round((a.clicks||0)/a.impresiones*100) : 0;
-                const marca = a.atributos?.marca || "—";
+                const isEd  = editing === a.id;
+                const ctr   = a.impresiones ? Math.round((a.clicks||0)/a.impresiones*100) : 0;
+
                 return (
                   <>
                     <tr key={a.id} style={{
-                      background: isSel ? "rgba(255,122,0,.04)" : isExp ? "#FAFAFA" : "#fff",
+                      background: isSel?"rgba(255,122,0,.04)": isExp?"#FAFAFA":"#fff",
                       transition:"background .1s",
                     }}>
-                      {/* Checkbox */}
-                      <td style={tdStyle}>
+                      <td style={td}>
                         <input type="checkbox" checked={isSel}
-                          onChange={() => toggleOne(a.id)}
-                          style={{ accentColor:ACCENT }}
-                        />
+                          onChange={()=>toggleOne(a.id)} style={{ accentColor:color }} />
                       </td>
-
-                      {/* Foto */}
-                      <td style={tdStyle}>
-                        <div style={{ width:40, height:40, borderRadius:6, overflow:"hidden",
-                          background:"#F3F4F6", flexShrink:0 }}>
+                      <td style={td}>
+                        <div style={{ width:40, height:40, borderRadius:6, overflow:"hidden", background:"#F3F4F6" }}>
                           {a.imagen_principal
-                            ? <img src={a.imagen_principal + "?width=80"} alt={a.nombre}
+                            ? <img src={a.imagen_principal+"?width=80"} alt={a.nombre}
                                 style={{ width:"100%", height:"100%", objectFit:"cover" }} />
                             : <div style={{ width:"100%", height:"100%", display:"flex",
                                 alignItems:"center", justifyContent:"center", fontSize:"1.2rem" }}>
@@ -383,134 +437,126 @@ export default function AdminPublicaciones() {
                           }
                         </div>
                       </td>
-
-                      {/* Nombre */}
-                      <td style={{ ...tdStyle, maxWidth:200 }}>
+                      <td style={{ ...td, maxWidth:200 }}>
                         <div style={{ fontWeight:600, color:"#111", overflow:"hidden",
                           textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{a.nombre}</div>
-                        {a.condicion && (
-                          <div style={{ fontSize:"10px", color:"#6B7280" }}>{a.condicion}</div>
-                        )}
+                        {a.condicion && <div style={{ fontSize:"10px", color:"#6B7280" }}>{a.condicion}</div>}
                       </td>
-
-                      {/* Tipo */}
-                      <td style={tdStyle}>
-                        <span style={{ fontSize:"11px", padding:"2px 7px", borderRadius:20, fontWeight:700,
-                          background: a.tipo==="secondhand"?"rgba(29,200,120,.1)":"rgba(255,122,0,.1)",
-                          color: a.tipo==="secondhand"?GREEN:ACCENT }}>
-                          {a.tipo==="secondhand"?"SH":"MKT"}
-                        </span>
+                      <td style={{ ...td, fontWeight:700, color }}>{fmtPrecio(a.precio,a.moneda)}</td>
+                      <td style={{ ...td, textAlign:"center" }}>
+                        <span style={{ color:a.stock===0?"#EF4444":a.stock<5?"#F59E0B":"#374151",
+                          fontWeight:a.stock<5?700:400 }}>{a.stock}</span>
                       </td>
-
-                      {/* Precio */}
-                      <td style={{ ...tdStyle, fontWeight:700, color:ACCENT }}>
-                        {fmtPrecio(a.precio, a.moneda)}
-                      </td>
-
-                      {/* Stock */}
-                      <td style={{ ...tdStyle, textAlign:"center" }}>
-                        <span style={{ color: a.stock===0?"#EF4444":a.stock<5?"#F59E0B":"#374151",
-                          fontWeight: a.stock<5?700:400 }}>
-                          {a.stock}
-                        </span>
-                      </td>
-
-                      {/* Status */}
-                      <td style={tdStyle}>
+                      <td style={td}>
                         <span style={{ fontSize:"11px", padding:"2px 8px", borderRadius:20,
-                          background:cfg.bg, color:cfg.color, fontWeight:700 }}>
-                          {cfg.label}
-                        </span>
+                          background:cfg.bg, color:cfg.color, fontWeight:700 }}>{cfg.label}</span>
                       </td>
-
-                      {/* Sync */}
-                      <td style={{ ...tdStyle, textAlign:"center" }}>
+                      <td style={{ ...td, textAlign:"center" }}>
                         <div style={{ display:"flex", gap:"4px", justifyContent:"center" }}>
-                          {[
-                            { key:"sync_ml",   icon:"🟡", title:"MercadoLibre" },
-                            { key:"sync_meta", icon:"🔵", title:"Meta" },
-                            { key:"sync_wa",   icon:"🟢", title:"WhatsApp" },
-                          ].map(s => (
-                            <span key={s.key} title={s.title} style={{
-                              fontSize:"14px", opacity: (a as any)[s.key] ? 1 : 0.25,
-                              cursor:"pointer",
-                            }}>{s.icon}</span>
+                          {[{k:"sync_ml",icon:"🟡"},{k:"sync_meta",icon:"🔵"},{k:"sync_wa",icon:"🟢"}].map(s=>(
+                            <span key={s.k} style={{ fontSize:"13px", opacity:(a as any)[s.k]?1:0.2 }}>{s.icon}</span>
                           ))}
                         </div>
                       </td>
-
-                      {/* Columnas opcionales */}
-                      {visibleCols.has("depto")     && <td style={tdStyle}>{a.departamento_nombre||"—"}</td>}
-                      {visibleCols.has("categoria") && <td style={tdStyle}>{a.categoria_nombre||"—"}</td>}
-                      {visibleCols.has("marca")     && <td style={tdStyle}>{marca}</td>}
-                      {visibleCols.has("ranking")   && <td style={{ ...tdStyle, textAlign:"center" }}>
-                        {a.ranking_score ? Number(a.ranking_score).toFixed(2) : "—"}
-                      </td>}
-                      {visibleCols.has("ctr")       && <td style={{ ...tdStyle, textAlign:"center" }}>{ctr}%</td>}
-                      {visibleCols.has("alta")      && <td style={tdStyle}>{fmtFecha(a.published_at||a.created_at)}</td>}
-                      {visibleCols.has("baja")      && <td style={tdStyle}>
-                        <span style={{ color: a.baja_prevista ? "#EF4444" : "#9CA3AF" }}>
-                          {fmtFecha(a.baja_prevista||a.deleted_at)}
-                        </span>
-                      </td>}
-                      {visibleCols.has("mkt1") && <td style={{ ...tdStyle, textAlign:"center" }}>
-                        <input type="checkbox" title="MKT Acción 1"
-                          checked={a.mkt_destacado||false} style={{ accentColor:ACCENT }}
-                          onChange={()=>{}} />
-                      </td>}
-                      {visibleCols.has("mkt2") && <td style={{ ...tdStyle, textAlign:"center" }}>
-                        <input type="checkbox" title="MKT Acción 2"
-                          checked={a.mkt_promovido||false} style={{ accentColor:ACCENT }}
-                          onChange={()=>{}} />
-                      </td>}
-
-                      {/* Expandir */}
-                      <td style={tdStyle}>
-                        <button onClick={() => toggleExpand(a.id)} style={{
-                          background:"none", border:"none", cursor:"pointer",
-                          color:"#9CA3AF", fontSize:"14px", padding:"2px 4px",
-                          transform: isExp?"rotate(180deg)":"rotate(0deg)",
-                          transition:"transform .2s",
+                      <td style={td}>{a.departamento_nombre||"—"}</td>
+                      <td style={td}>{fmtFecha(a.published_at||a.created_at)}</td>
+                      {visibleCols.has("categoria") && <td style={td}>{a.categoria_nombre||"—"}</td>}
+                      {visibleCols.has("marca")     && <td style={td}>{a.atributos?.marca||"—"}</td>}
+                      {visibleCols.has("ranking")   && <td style={td}>{a.ranking_score?Number(a.ranking_score).toFixed(2):"—"}</td>}
+                      {visibleCols.has("ctr")       && <td style={td}>{ctr}%</td>}
+                      {visibleCols.has("baja")      && <td style={td}>{fmtFecha(a.baja_prevista||a.deleted_at)}</td>}
+                      {visibleCols.has("mkt1")      && <td style={{ ...td, textAlign:"center" }}><input type="checkbox" checked={!!a.mkt_destacado} style={{ accentColor:color }} onChange={()=>{}} /></td>}
+                      {visibleCols.has("mkt2")      && <td style={{ ...td, textAlign:"center" }}><input type="checkbox" checked={!!a.mkt_promovido} style={{ accentColor:color }} onChange={()=>{}} /></td>}
+                      <td style={td}>
+                        <button onClick={()=>toggleExpand(a.id)} style={{
+                          background:"none", border:"none", cursor:"pointer", color:"#9CA3AF",
+                          fontSize:"13px", padding:"2px 4px",
+                          transform:isExp?"rotate(180deg)":"rotate(0deg)", transition:"transform .2s",
                         }}>▼</button>
                       </td>
                     </tr>
 
-                    {/* Fila expandida */}
+                    {/* EXPANDIDO */}
                     {isExp && (
                       <tr key={a.id+"-exp"}>
                         <td colSpan={99} style={{ padding:0, borderBottom:"2px solid #F3F4F6" }}>
-                          <div style={{ padding:"1rem 1.25rem", background:"#F9FAFB",
-                            display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:"1rem" }}>
+                          <div style={{ padding:"1.25rem", background:"#F9FAFB",
+                            display:"grid", gridTemplateColumns:"1.2fr 1fr 1fr", gap:"1.25rem" }}>
 
-                            {/* Info */}
+                            {/* INFO / EDICIÓN INLINE */}
                             <div>
-                              <div style={{ fontSize:"0.72rem", fontWeight:700, color:"#9CA3AF",
-                                textTransform:"uppercase", marginBottom:"0.5rem" }}>Información</div>
-                              <div style={{ fontSize:"0.82rem", color:"#374151", lineHeight:1.8 }}>
-                                <div><b>ID:</b> <span style={{ fontFamily:"monospace", fontSize:"10px" }}>{a.id.slice(0,16)}</span></div>
-                                <div><b>Depto:</b> {a.departamento_nombre||"—"}</div>
-                                <div><b>Categoría:</b> {a.categoria_nombre||"—"}</div>
-                                <div><b>Marca:</b> {marca}</div>
-                                {a.condicion && <div><b>Condición:</b> {a.condicion}</div>}
-                                {a.descripcion && (
-                                  <div style={{ marginTop:"0.25rem", color:"#6B7280", fontSize:"0.78rem",
-                                    lineHeight:1.5 }}>{a.descripcion.slice(0,200)}{a.descripcion.length>200?"…":""}</div>
-                                )}
+                              <div style={{ display:"flex", justifyContent:"space-between",
+                                alignItems:"center", marginBottom:"0.75rem" }}>
+                                <span style={{ fontSize:"0.72rem", fontWeight:700, color:"#9CA3AF",
+                                  textTransform:"uppercase" }}>Información</span>
+                                {isEd ? (
+                                  <div style={{ display:"flex", gap:"6px" }}>
+                                    <button onClick={()=>saveEdit(a.id)} style={{
+                                      padding:"0.25rem 0.75rem", background:color, color:"#fff",
+                                      border:"none", borderRadius:6, fontSize:"0.75rem",
+                                      fontWeight:700, cursor:"pointer" }}>Guardar</button>
+                                    <button onClick={()=>setEditing(null)} style={{
+                                      padding:"0.25rem 0.75rem", background:"none", color:"#6B7280",
+                                      border:"1px solid #E5E7EB", borderRadius:6,
+                                      fontSize:"0.75rem", cursor:"pointer" }}>Cancelar</button>
+                                  </div>
+                                ) : null}
                               </div>
+
+                              {isEd ? (
+                                <div style={{ display:"flex", flexDirection:"column", gap:"0.5rem" }}>
+                                  <div>
+                                    <div style={{ fontSize:"10px", color:"#9CA3AF", marginBottom:"2px" }}>Nombre</div>
+                                    <input style={inpStyle} value={editForm.nombre||""}
+                                      onChange={e=>setEditForm(f=>({...f,nombre:e.target.value}))} />
+                                  </div>
+                                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0.5rem" }}>
+                                    <div>
+                                      <div style={{ fontSize:"10px", color:"#9CA3AF", marginBottom:"2px" }}>Precio</div>
+                                      <input type="number" style={inpStyle} value={editForm.precio||""}
+                                        onChange={e=>setEditForm(f=>({...f,precio:parseFloat(e.target.value)}))} />
+                                    </div>
+                                    <div>
+                                      <div style={{ fontSize:"10px", color:"#9CA3AF", marginBottom:"2px" }}>Stock</div>
+                                      <input type="number" style={inpStyle} value={editForm.stock||""}
+                                        onChange={e=>setEditForm(f=>({...f,stock:parseInt(e.target.value)}))} />
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div style={{ fontSize:"10px", color:"#9CA3AF", marginBottom:"2px" }}>Descripción</div>
+                                    <textarea style={{ ...inpStyle, minHeight:70, resize:"vertical" }}
+                                      value={editForm.descripcion||""}
+                                      onChange={e=>setEditForm(f=>({...f,descripcion:e.target.value}))} />
+                                  </div>
+                                </div>
+                              ) : (
+                                <div style={{ fontSize:"0.82rem", color:"#374151", lineHeight:2 }}>
+                                  <div><b>ID:</b> <span style={{ fontFamily:"monospace", fontSize:"10px" }}>{a.id.slice(0,16)}</span></div>
+                                  <div><b>Depto:</b> {a.departamento_nombre||"—"}</div>
+                                  <div><b>Categoría:</b> {a.categoria_nombre||"—"}</div>
+                                  <div><b>Marca:</b> {a.atributos?.marca||"—"}</div>
+                                  {a.condicion && <div><b>Condición:</b> {a.condicion}</div>}
+                                  {a.descripcion && (
+                                    <div style={{ color:"#6B7280", fontSize:"0.78rem", lineHeight:1.5, marginTop:"0.25rem" }}>
+                                      {a.descripcion.slice(0,220)}{a.descripcion.length>220?"…":""}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
 
-                            {/* Métricas */}
+                            {/* MÉTRICAS */}
                             <div>
                               <div style={{ fontSize:"0.72rem", fontWeight:700, color:"#9CA3AF",
-                                textTransform:"uppercase", marginBottom:"0.5rem" }}>Métricas</div>
+                                textTransform:"uppercase", marginBottom:"0.75rem" }}>Métricas</div>
                               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0.5rem" }}>
                                 {[
-                                  { label:"Impresiones", value: a.impresiones||0 },
-                                  { label:"Clicks",      value: a.clicks||0 },
-                                  { label:"CTR",         value: (a.impresiones?(((a.clicks||0)/a.impresiones)*100).toFixed(1):0)+"%"},
-                                  { label:"Ranking",     value: a.ranking_score?Number(a.ranking_score).toFixed(3):"—" },
-                                  { label:"Rating",      value: a.rating_promedio?Number(a.rating_promedio).toFixed(1)+" ★":"—" },
-                                  { label:"Reseñas",     value: a.rating_count||0 },
+                                  { label:"Impresiones", value:a.impresiones||0 },
+                                  { label:"Clicks",      value:a.clicks||0 },
+                                  { label:"CTR",         value:(a.impresiones?(((a.clicks||0)/a.impresiones)*100).toFixed(1):0)+"%" },
+                                  { label:"Ranking",     value:a.ranking_score?Number(a.ranking_score).toFixed(3):"—" },
+                                  { label:"Rating",      value:a.rating_promedio?Number(a.rating_promedio).toFixed(1)+" ★":"—" },
+                                  { label:"Reseñas",     value:a.rating_count||0 },
                                 ].map(m => (
                                   <div key={m.label} style={{ background:"#fff", borderRadius:8,
                                     padding:"0.4rem 0.6rem", border:"1px solid #E5E7EB" }}>
@@ -521,55 +567,79 @@ export default function AdminPublicaciones() {
                               </div>
                             </div>
 
-                            {/* Acciones */}
+                            {/* ACCIONES */}
                             <div>
                               <div style={{ fontSize:"0.72rem", fontWeight:700, color:"#9CA3AF",
-                                textTransform:"uppercase", marginBottom:"0.5rem" }}>Acciones</div>
-                              <div style={{ display:"flex", flexDirection:"column", gap:"0.4rem" }}>
-                                {a.status !== "active" && (
-                                  <button onClick={() => cambiarStatus(a.id,"active")} style={{
-                                    padding:"0.4rem 0.75rem", background:GREEN, color:"#fff",
-                                    border:"none", borderRadius:7, fontWeight:700,
-                                    fontSize:"0.8rem", cursor:"pointer", textAlign:"left",
-                                  }}>✓ Activar</button>
-                                )}
-                                {a.status === "active" && (
-                                  <button onClick={() => cambiarStatus(a.id,"paused")} style={{
-                                    padding:"0.4rem 0.75rem", background:"none", color:"#854d0e",
-                                    border:"1.5px solid #F59E0B", borderRadius:7, fontWeight:700,
-                                    fontSize:"0.8rem", cursor:"pointer", textAlign:"left",
-                                  }}>⏸ Pausar</button>
-                                )}
-                                {a.status === "draft" && (
-                                  <button onClick={() => cambiarStatus(a.id,"active")} style={{
-                                    padding:"0.4rem 0.75rem", background:ACCENT, color:"#fff",
-                                    border:"none", borderRadius:7, fontWeight:700,
-                                    fontSize:"0.8rem", cursor:"pointer", textAlign:"left",
-                                  }}>🚀 Publicar</button>
-                                )}
-                                <button onClick={() => navigate("/admin/catalog/articulos?edit="+a.id)} style={{
-                                  padding:"0.4rem 0.75rem", background:"none", color:BLUE,
-                                  border:`1.5px solid ${BLUE}`, borderRadius:7, fontWeight:700,
-                                  fontSize:"0.8rem", cursor:"pointer", textAlign:"left",
-                                }}>✏ Editar</button>
-                                <div style={{ display:"flex", gap:"4px", marginTop:"0.25rem" }}>
-                                  {[
-                                    { icon:"🟡", label:"ML",   tip:"Sync MercadoLibre" },
-                                    { icon:"🔵", label:"Meta", tip:"Sync Meta" },
-                                    { icon:"🟢", label:"WA",   tip:"Sync WhatsApp" },
-                                  ].map(s => (
-                                    <button key={s.label} title={s.tip} style={{
-                                      flex:1, padding:"0.35rem", fontSize:"11px",
-                                      border:"1.5px solid #E5E7EB", borderRadius:6,
-                                      background:"#fff", cursor:"pointer", fontWeight:600, color:"#374151",
-                                    }}>{s.icon} {s.label}</button>
-                                  ))}
-                                </div>
-                                <button onClick={() => eliminar(a.id)} style={{
-                                  padding:"0.4rem 0.75rem", background:"none", color:"#EF4444",
-                                  border:"1.5px solid #EF4444", borderRadius:7, fontWeight:700,
-                                  fontSize:"0.8rem", cursor:"pointer", textAlign:"left", marginTop:"0.25rem",
-                                }}>🗑 Eliminar</button>
+                                textTransform:"uppercase", marginBottom:"0.75rem" }}>Acciones</div>
+
+                              {/* Fila 1: Nuevo, Clonar, Editar */}
+                              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:"5px", marginBottom:"5px" }}>
+                                <button onClick={()=>navigate("/admin/catalog/articulos")} style={{
+                                  padding:"0.45rem 0.25rem", fontSize:"0.75rem", fontWeight:700,
+                                  border:`1.5px solid ${color}`, borderRadius:7,
+                                  background:color, color:"#fff", cursor:"pointer" }}>＋ Nuevo</button>
+                                <button onClick={()=>clonar(a)} style={{
+                                  padding:"0.45rem 0.25rem", fontSize:"0.75rem", fontWeight:700,
+                                  border:`1.5px solid ${BLUE}`, borderRadius:7,
+                                  background:"none", color:BLUE, cursor:"pointer" }}>⎘ Clonar</button>
+                                <button onClick={()=>isEd?setEditing(null):startEdit(a)} style={{
+                                  padding:"0.45rem 0.25rem", fontSize:"0.75rem", fontWeight:700,
+                                  border:`1.5px solid ${BLUE}`, borderRadius:7,
+                                  background:isEd?BLUE:"none", color:isEd?"#fff":BLUE, cursor:"pointer" }}>✏ Editar</button>
+                              </div>
+
+                              {/* Fila 2: Pausar/Activar, Archivar, Eliminar */}
+                              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:"5px", marginBottom:"5px" }}>
+                                <button onClick={()=>cambiarStatus(a.id, a.status==="active"?"paused":"active")} style={{
+                                  padding:"0.45rem 0.25rem", fontSize:"0.75rem", fontWeight:700,
+                                  border:"1.5px solid #F59E0B", borderRadius:7,
+                                  background:"none", color:"#854d0e", cursor:"pointer" }}>
+                                  {a.status==="active"?"⏸ Pausar":"▶ Activar"}
+                                </button>
+                                <button onClick={()=>archivar(a.id)} style={{
+                                  padding:"0.45rem 0.25rem", fontSize:"0.75rem", fontWeight:700,
+                                  border:"1.5px solid #6B7280", borderRadius:7,
+                                  background:"none", color:"#6B7280", cursor:"pointer" }}>📦 Archivar</button>
+                                <button onClick={()=>eliminar(a.id)} style={{
+                                  padding:"0.45rem 0.25rem", fontSize:"0.75rem", fontWeight:700,
+                                  border:"1.5px solid #EF4444", borderRadius:7,
+                                  background:"none", color:"#EF4444", cursor:"pointer" }}>🗑 Eliminar</button>
+                              </div>
+
+                              {/* Sync fila 1: ML, Meta, WA, Custom */}
+                              <div style={{ fontSize:"9px", color:"#9CA3AF", textTransform:"uppercase",
+                                margin:"8px 0 4px", letterSpacing:".05em" }}>Publicar en</div>
+                              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:"4px", marginBottom:"4px" }}>
+                                {[
+                                  { icon:"🟡", label:"ML",     c:"#FFE600", tc:"#333" },
+                                  { icon:"🔵", label:"Meta",   c:"#1877F2", tc:"#fff" },
+                                  { icon:"🟢", label:"WA",     c:"#25D366", tc:"#fff" },
+                                  { icon:"⚙",  label:"Custom", c:"#6B7280", tc:"#fff" },
+                                ].map(s => (
+                                  <button key={s.label} style={{
+                                    padding:"0.35rem 0.1rem", fontSize:"10px", fontWeight:700,
+                                    border:`1.5px solid ${s.c}`, borderRadius:6,
+                                    background:s.c, color:s.tc, cursor:"pointer" }}>
+                                    {s.icon} {s.label}
+                                  </button>
+                                ))}
+                              </div>
+
+                              {/* Sync fila 2: Ver en canales */}
+                              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:"4px" }}>
+                                {[
+                                  { icon:"🟡", label:"Ver ML"  },
+                                  { icon:"🔵", label:"Ver Meta"},
+                                  { icon:"🟢", label:"Ver WA"  },
+                                  { icon:"🌐", label:"Mi web"  },
+                                ].map(s => (
+                                  <button key={s.label} style={{
+                                    padding:"0.35rem 0.1rem", fontSize:"10px", fontWeight:600,
+                                    border:"1.5px solid #E5E7EB", borderRadius:6,
+                                    background:"#fff", color:"#6B7280", cursor:"pointer" }}>
+                                    {s.icon} {s.label}
+                                  </button>
+                                ))}
                               </div>
                             </div>
                           </div>
