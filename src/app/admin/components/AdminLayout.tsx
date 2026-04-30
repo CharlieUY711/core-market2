@@ -89,7 +89,7 @@ export default function AdminLayout() {
     { path: "/admin/publicaciones",label: "♻️ Mis publicaciones"                },
     { path: "/admin/biblioteca",   label: "🗂 Biblioteca"   },
     { path: "/admin/editor",       label: "🎨 Editor"       },
-    { path: "/admin/profile",      label: "👤 Mi perfil"    },
+    { path: "/admin/export", label: "📤 Exportar" },`n    { path: "/admin/profile",      label: "👤 Mi perfil"    },
   ];
   const adminMenu = [
     { path: "/admin/catalog", label: "📋 Catálogo", children: [{ path: "/admin/catalog/articulos", label: "📝 Artículos" }] },
