@@ -135,7 +135,7 @@ export default function AdminLayout() {
             return (
               <Link key={item.path} to={item.path} style={{
                 display:"block", padding:"0.55rem 1.5rem", textDecoration:"none", fontSize:"0.875rem",
-                background: active ? `rgba(255,122,0,0.15)` : "transparent",
+                background: active ? "rgba(255,122,0,0.15)" : "transparent",
                 color: active ? ACCENT : "rgba(255,255,255,0.62)",
                 borderLeft: active ? `3px solid ${ACCENT}` : "3px solid transparent",
                 fontWeight: active ? 600 : 400, transition:"all 0.12s",
