@@ -1,8 +1,10 @@
-/* =====================================================
+﻿/* =====================================================
    Hook para cargar productos desde la API
    Charlie Marketplace Builder v1.5
    ===================================================== */
 import { useState, useEffect } from 'react';
+import { supabase } from '../../utils/supabase/client';
+import { supabase } from '../../utils/supabase/client';
 import { 
   fetchProductosMarket, 
   fetchProductosSecondHand,
@@ -126,18 +128,73 @@ export function useProductos() {
         });
         setDeptColors(colors);
 
-        // Cargar productos
+        // Cargar desde articulos (tabla canónica)
+        const { data: artData } = await supabase
+          .from('articulos')
+          .select('*')
+          .eq('status', 'active')
+          .is('deleted_at', null)
+          .order('ranking_score', { ascending: false })
+          .limit(100);
+
+        const arts = artData || [];
+        const artMarket = arts.filter((a: any) => a.tipo === 'market');
+        const artSecondHand = arts.filter((a: any) => a.tipo === 'secondhand');
+
+        // Transformar articulos a formato del storefront
+        const toMkt = (a: any): MktProduct => {
+          const precio = a.precio ? Number(a.precio).toLocaleString('es-UY') : '0';
+          const precioOrig = a.precio_original ? Number(a.precio_original).toLocaleString('es-UY') : null;
+          const desc = a.precio_original && a.precio_original > a.precio
+            ? Math.round((1 - a.precio / a.precio_original) * 100) : null;
+          return {
+            id: parseInt(a.id.replace(/-/g,'').substring(0,8), 16) || Math.random()*1000000,
+            img: a.imagen_principal || (a.imagenes?.[0]?.url) || '',
+            d: a.departamento_nombre || 'Sin categoría',
+            n: a.nombre,
+            p: precio,
+            o: precioOrig,
+            b: desc ? -\% : null,
+            bt: '',
+            desc: a.descripcion || '',
+            r: a.rating_promedio || 0,
+            rv: a.rating_count || 0,
+            q: '',
+            vids: (a.videos || []).map((v: any) => typeof v === 'string' ? v : v?.url).filter(Boolean),
+            publishedDate: a.published_at ? new Date(a.published_at).toLocaleDateString('es-UY') : undefined,
+          };
+        };
+
+        const toSh = (a: any): ShProduct => {
+          const condMap: Record<string,number> = { 'Excelente':5,'Muy bueno':4,'Bueno':3,'Regular':2,'Para reparar':1 };
+          return {
+            id: parseInt(a.id.replace(/-/g,'').substring(0,8), 16) || Math.random()*1000000,
+            img: a.imagen_principal || (a.imagenes?.[0]?.url) || '',
+            d: a.departamento_nombre || 'Sin categoría',
+            n: \\,
+            p: a.precio ? Number(a.precio).toLocaleString('es-UY') : '0',
+            og: a.precio_original ? Number(a.precio_original).toLocaleString('es-UY') : '',
+            c: a.condicion ? condMap[a.condicion] || 3 : 3,
+            desc: a.descripcion || '',
+            r: a.rating_promedio || 0,
+            rv: a.rating_count || 0,
+            q: '',
+            vids: (a.videos || []).map((v: any) => typeof v === 'string' ? v : v?.url).filter(Boolean),
+            publishedDate: a.published_at ? new Date(a.published_at).toLocaleDateString('es-UY') : undefined,
+          };
+        };
+
+        // Cargar también desde tablas legacy (mientras existan)
         const [marketResult, secondhandResult] = await Promise.allSettled([
           fetchProductosMarket({ estado: 'activo', limit: 100 }),
           fetchProductosSecondHand({ estado: 'activo', limit: 100 }),
         ]);
-
         const market = marketResult.status === 'fulfilled' ? marketResult.value : [];
         const secondhand = secondhandResult.status === 'fulfilled' ? secondhandResult.value : [];
 
-        // Transformar productos
-        setProductosMarket(market.map(p => transformMarketProduct(p, colors)));
-        setProductosSecondHand(secondhand.map(p => transformSecondHandProduct(p, colors)));
+        // Combinar: articulos primero (tienen ranking), luego legacy
+        setProductosMarket([...artMarket.map(toMkt), ...market.map(p => transformMarketProduct(p, colors))]);
+        setProductosSecondHand([...artSecondHand.map(toSh), ...secondhand.map(p => transformSecondHandProduct(p, colors))]);
 
       } catch (err) {
         console.error('Error cargando productos:', err);

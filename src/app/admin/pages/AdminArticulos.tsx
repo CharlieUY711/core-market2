@@ -93,7 +93,7 @@ export default function AdminArticulos() {
     if (step === 2) return nombre.trim().length > 0 && descripcion.trim().length > 0;
     if (step === 3) return imagenes.length > 0;
     if (step === 4) return precio.length > 0 && parseFloat(precio) > 0;
-    if (step === 5) return deptoId.length > 0;
+    if (step === 5) return true; // departamento opcional temporalmente
     return true;
   };
 
