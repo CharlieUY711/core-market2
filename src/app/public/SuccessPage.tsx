@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 
 export default function SuccessPage() {
   const navigate = useNavigate();
@@ -29,3 +29,4 @@ export default function SuccessPage() {
     </div>
   );
 }
+

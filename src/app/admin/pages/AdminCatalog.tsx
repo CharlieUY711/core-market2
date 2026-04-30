@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, memo } from "react";
-import { useOutletContext } from "react-router";
+import { useOutletContext } from "react-router-dom";
 import { supabase } from "../../../utils/supabase/client";
 
 interface Depto  { id:string; nombre:string; color:string; activo:boolean; orden:number; }
@@ -421,3 +421,4 @@ function Btn({color,bg,textColor,onClick,children}:any) {
     </button>
   );
 }
+

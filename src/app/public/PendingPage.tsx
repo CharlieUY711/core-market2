@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams, Link } from "react-router";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 
 export default function PendingPage() {
   const navigate = useNavigate();
@@ -21,3 +21,4 @@ export default function PendingPage() {
     </div>
   );
 }
+

@@ -1,10 +1,10 @@
-﻿/* =====================================================
+/* =====================================================
    ODDY Storefront — OddyStorefront.tsx
    Charlie Marketplace Builder v1.5
    Frontstore principal: Market + Segunda Mano
    ===================================================== */
 import { useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from '../../utils/supabase/client';
 import { useProductos } from '../hooks/useProductos';
 import { agregarAlCarrito } from '../services/carritoApi';
@@ -2970,3 +2970,4 @@ export default function OddyStorefront() {
     </div>
   );
 }
+

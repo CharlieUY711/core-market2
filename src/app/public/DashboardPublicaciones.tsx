@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useOutletContext } from "react-router";
+import { useOutletContext } from "react-router-dom";
 import { supabase } from "../../utils/supabase/client";
 
 export default function DashboardPublicaciones() {
@@ -117,3 +117,4 @@ export default function DashboardPublicaciones() {
     </div>
   );
 }
+

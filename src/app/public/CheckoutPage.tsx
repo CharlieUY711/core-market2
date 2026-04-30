@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router-dom";
 import { getCarrito, vaciarCarrito } from "../services/carritoApi";
 import { getTipoCambioUSD, formatearPrecio, convertirUYUaUSD, convertirUSDaUYU } from "../services/bcuApi";
 import { supabase } from "../../utils/supabase/client";
@@ -216,3 +216,4 @@ export default function CheckoutPage() {
     </div>
   );
 }
+

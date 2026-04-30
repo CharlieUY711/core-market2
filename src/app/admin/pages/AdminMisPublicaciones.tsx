@@ -1,5 +1,5 @@
-﻿import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../../../utils/supabase/client";
 
 const ACCENT = "#FF7A00";

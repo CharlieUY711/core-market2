@@ -4,7 +4,7 @@
    Mobile-first, emotiva, sin auth
    ===================================================== */
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router';
+import { useParams } from "react-router-dom";
 import { projectId, publicAnonKey } from '../../utils/supabase/info';
 import {
   Gift, Heart, Star, Coffee, Package, Sparkles, Sun,
@@ -282,3 +282,4 @@ function PageShell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+

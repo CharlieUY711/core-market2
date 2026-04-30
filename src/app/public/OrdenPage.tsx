@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useSearchParams, Link } from "react-router";
+import { useParams, useSearchParams, Link } from "react-router-dom";
 import { supabase } from "../../utils/supabase/client";
 
 export default function OrdenPage() {
@@ -160,3 +160,4 @@ export default function OrdenPage() {
     </div>
   );
 }
+

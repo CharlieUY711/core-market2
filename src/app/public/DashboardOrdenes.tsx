@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useOutletContext } from "react-router";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { supabase } from "../../utils/supabase/client";
 
 export default function DashboardOrdenes() {
@@ -48,3 +48,4 @@ export default function DashboardOrdenes() {
     </div>
   );
 }
+

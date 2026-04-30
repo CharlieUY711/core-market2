@@ -3,7 +3,7 @@ import { supabase } from "../../../utils/supabase/client";
 import AddressAutocomplete from "../../components/maps/AddressAutocomplete";
 import AddressCard from "../../components/profile/AddressCard";
 import AddressMap from "../../components/maps/AddressMap";
-import { useOutletContext } from "react-router";
+import { useOutletContext } from "react-router-dom";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Address {
@@ -702,3 +702,4 @@ function AddressForm({ form, setForm, editId, onCancel, onSubmit }: any) {
     </div>
   );
 }
+

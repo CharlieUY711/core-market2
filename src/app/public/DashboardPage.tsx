@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../../utils/supabase/client";
 
 export default function DashboardPage() {
@@ -109,3 +109,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useOutletContext, useNavigate } from "react-router";
+import { useOutletContext, useNavigate } from "react-router-dom";
 import { supabase } from "../../../utils/supabase/client";
 import SelectorMediaArticulo from "../components/SelectorMediaArticulo";
 
@@ -513,3 +513,4 @@ export default function AdminArticulos() {
     </div>
   );
 }
+

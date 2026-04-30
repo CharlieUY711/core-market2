@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useNavigate, useLocation } from "react-router";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../../utils/supabase/client";
 
 export function useRequireAuth() {
@@ -37,3 +37,4 @@ export function useRequireAuth() {
 
   return { loading, user };
 }
+

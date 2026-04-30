@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Outlet, Link, useNavigate, useLocation } from "react-router";
+import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../../utils/supabase/client";
 
 export default function DashboardLayout() {
@@ -68,3 +68,4 @@ export default function DashboardLayout() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams, Link } from "react-router";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 
 export default function FailurePage() {
   const navigate = useNavigate();
@@ -17,3 +17,4 @@ export default function FailurePage() {
     </div>
   );
 }
+

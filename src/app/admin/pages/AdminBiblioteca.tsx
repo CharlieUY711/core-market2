@@ -1,5 +1,5 @@
-﻿import { useState, useRef, useCallback } from "react";
-import { useOutletContext } from "react-router";
+import { useState, useRef, useCallback } from "react";
+import { useOutletContext } from "react-router-dom";
 import { supabase } from "../../../utils/supabase/client";
 import { useMediaLibrary, MediaTipo, MediaItem } from "../../hooks/useMediaLibrary";
 

@@ -1,7 +1,7 @@
 /* =====================================================
    ODDY Frontstore Standalone — App Root
    ===================================================== */
-import { RouterProvider } from "react-router";
+import { RouterProvider } from "react-router-dom";
 import { router } from "./routes";
 
 export default function App() {
