@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useOutletContext, useNavigate } from "react-router";
 import { supabase } from "../../../utils/supabase/client";
 import SelectorMediaArticulo from "../components/SelectorMediaArticulo";
@@ -107,12 +107,12 @@ export default function AdminArticulos() {
       if (!userId) throw new Error("Sesión expirada, iniciá sesión nuevamente");
       const { error } = await supabase.from(tabla).insert({
         vendedor_id:         userId,
-        tipo,
-        nombre:              nombre.trim(),
-        tipo,
-        nombre:              nombre.trim(),
-        tipo,
-        nombre:              nombre.trim(),
+        tipo, 
+        nombre: nombre.trim(), 
+        tipo, 
+        nombre: nombre.trim(), 
+        tipo, 
+        nombre: nombre.trim(), 
         descripcion:         descripcion.trim(),
         precio:              parseFloat(precio),
         precio_original:     precioOrig ? parseFloat(precioOrig) : null,
