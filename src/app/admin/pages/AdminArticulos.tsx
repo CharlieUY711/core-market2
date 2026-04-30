@@ -100,9 +100,12 @@ export default function AdminArticulos() {
   const handlePublicar = async () => {
     setLoading(true);
     try {
-      const tabla = tipo === "market" ? "productos_market" : "productos_secondhand";
+      const tabla = "articulos";
       const depto = deptos.find(d => d.id === deptoId);
+      const { data:{ user } } = await supabase.auth.getUser();
       const { error } = await supabase.from(tabla).insert({
+        vendedor_id:         user?.id,
+        tipo,
         nombre:              nombre.trim(),
         descripcion:         descripcion.trim(),
         precio:              parseFloat(precio),
@@ -110,13 +113,13 @@ export default function AdminArticulos() {
         moneda,
         stock:               parseInt(stock) || 1,
         imagen_principal:    imagenes[0] || null,
-        imagenes:            imagenes.length > 0 ? imagenes : null,
-        videos:              videoUrls.length > 0 ? videoUrls : null,
+        imagenes:            imagenes.length > 0 ? imagenes.map((url: string, i: number) => ({ url, orden: i, principal: i === 0 })) : [],
+        videos:              videoUrls.length > 0 ? videoUrls.map((url: string, i: number) => ({ url, orden: i })) : [],
         departamento_id:     deptoId || null,
         departamento_nombre: depto?.nombre || null,
-        estado:              condicion,
+        condicion:           tipo === "secondhand" ? condicion : null,
         status:              publicarComo === "draft" ? "draft" : disponibilidad === "agotado" ? "inactive" : "active",
-        published_date:      publicarComo === "active" ? new Date().toISOString() : null,
+        published_at:        publicarComo === "active" ? new Date().toISOString() : null,
       });
       if (error) throw error;
       notify(publicarComo === "draft" ? "Guardado como borrador — podés publicarlo cuando quieras" : "¡Listo! Tu artículo ya está publicado en Charlie Market");
@@ -127,7 +130,6 @@ export default function AdminArticulos() {
       setLoading(false);
     }
   };
-
   const inp: React.CSSProperties = {
     width:"100%", padding:"0.6rem 0.75rem", border:"1.5px solid #E5E7EB",
     borderRadius:"8px", fontSize:"0.875rem", outline:"none",
