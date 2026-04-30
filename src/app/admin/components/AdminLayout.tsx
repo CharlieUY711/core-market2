@@ -1,7 +1,16 @@
-﻿import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState, createContext, useContext } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router";
 import { supabase } from "../../../utils/supabase/client";
 import { useUserRole } from "../hooks/useUserRole";
+
+interface ShopCtx {
+  isSH:boolean; setIsSH:(v:boolean)=>void;
+  topStats:{label:string;value:number|string;color:string}[];
+  setTopStats:(s:{label:string;value:number|string;color:string}[])=>void;
+}
+export const ShopContext = createContext<ShopCtx>({isSH:false,setIsSH:()=>{},topStats:[],setTopStats:()=>{}});
+export const useShop = () => useContext(ShopContext);
+
 
 const SIDEBAR_BG  = "#0F3460";
 const ACCENT      = "#FF7A00";
@@ -65,6 +74,8 @@ function UserAvatar({ user, isAdmin }: { user: any; isAdmin: boolean }) {
 
 export default function AdminLayout() {
   const navigate  = useNavigate();
+  const [isSH, setIsSH] = useState(false);
+  const [topStats, setTopStats] = useState<{label:string;value:number|string;color:string}[]>([]);
   const location  = useLocation();
   const { user, isAdmin, loading } = useUserRole();
 
@@ -78,16 +89,13 @@ export default function AdminLayout() {
     { path: "/admin/publicaciones",label: "♻️ Mis publicaciones"                },
     { path: "/admin/biblioteca",   label: "🗂 Biblioteca"   },
     { path: "/admin/editor",       label: "🎨 Editor"       },
+    { path: "/admin/profile",      label: "👤 Mi perfil"    },
   ];
   const adminMenu = [
     { path: "/admin/catalog", label: "📋 Catálogo", children: [{ path: "/admin/catalog/articulos", label: "📝 Artículos" }] },
     { path: "/admin/analytics",    label: "📈 Analytics"    },
     { path: "/admin/ml",           label: "🟡 MercadoLibre" },
-
   ];
-
-
-
   const isActive = (path: string, exact?: boolean) =>
     exact ? location.pathname === path : location.pathname.startsWith(path);
 
@@ -202,6 +210,26 @@ export default function AdminLayout() {
             onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.7)")}>
             ↻
           </button>
+          {/* Toggle Market / SH — interruptor físico */}
+          <div style={{display:"flex",alignItems:"center",gap:"8px",marginRight:"4px"}}>
+            <span style={{fontSize:"0.72rem",fontWeight:700,color:isSH?"rgba(255,255,255,.4)":"rgba(255,255,255,.9)",transition:"all .2s",letterSpacing:".03em"}}>MKT</span>
+            <div onClick={()=>setIsSH(p=>!p)} style={{
+              width:44,height:24,borderRadius:12,cursor:"pointer",position:"relative",flexShrink:0,
+              background:isSH?"#1DC878":"#FF7A00",
+              boxShadow:"inset 0 2px 6px rgba(0,0,0,.3), 0 1px 0 rgba(255,255,255,.1)",
+              transition:"background .25s",
+            }}>
+              <div style={{
+                position:"absolute",top:3,
+                left:isSH?"calc(100% - 21px)":"3px",
+                width:18,height:18,borderRadius:"50%",
+                background:"#fff",
+                boxShadow:"0 2px 5px rgba(0,0,0,.35), 0 1px 2px rgba(0,0,0,.2)",
+                transition:"left .22s cubic-bezier(.4,0,.2,1)",
+              }}/>
+            </div>
+            <span style={{fontSize:"0.72rem",fontWeight:700,color:isSH?"rgba(255,255,255,.9)":"rgba(255,255,255,.4)",transition:"all .2s",letterSpacing:".03em"}}>SH</span>
+          </div>
           <Link to="/" style={{ color: ACCENT, textDecoration:"none", fontSize:"0.82rem", fontWeight:600, padding:"0.35rem 0.9rem", border:`1px solid ${ACCENT}`, borderRadius:"6px", transition:"all 0.15s" }}>
             Ver tienda
           </Link>
@@ -209,7 +237,9 @@ export default function AdminLayout() {
 
         {/* Content */}
         <main style={{ flex:1, overflow:"auto", padding:"2rem" }}>
-          <Outlet context={{ user, isAdmin }} />
+          <ShopContext.Provider value={{isSH,setIsSH,topStats,setTopStats}}>
+            <Outlet context={{ user, isAdmin }} />
+          </ShopContext.Provider>
         </main>
       </div>
     </div>
