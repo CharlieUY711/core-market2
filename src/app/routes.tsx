@@ -16,7 +16,7 @@ import AdminML                 from "./admin/pages/AdminML";
 import AdminCatalog            from "./admin/pages/AdminCatalog";
 import AdminExport from "./admin/pages/AdminExport";
 import AdminPublicaciones      from "./admin/pages/AdminPublicaciones";
-import AdminProfile            from "./admin/pages/AdminProfile";
+import AdminImport             from "./admin/pages/AdminImport";
 import AdminArticulos          from "./admin/pages/AdminArticulos";
 import AdminBiblioteca         from "./admin/pages/AdminBiblioteca";
 import AdminEditor             from "./admin/editor/EditorPage";
@@ -41,6 +41,7 @@ export const TODAS_LAS_RUTAS: (RouteObject & { id: string })[] = [
       { id: "admin-orders",         path: "orders",        Component: AdminOrders },
       { id: "admin-publicaciones",  path: "publicaciones", Component: AdminPublicaciones },
       { id: "admin-export", path: "export", Component: AdminExport },
+      { id: "admin-import", path: "import", Component: AdminImport },
       { id: "admin-profile", path: "profile", Component: AdminProfile },
       { id: "admin-catalog-articulos", path: "catalog/articulos", Component: AdminArticulos },
       { id: "admin-biblioteca", path: "biblioteca", Component: AdminBiblioteca },
