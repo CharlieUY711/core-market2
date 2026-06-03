@@ -339,3 +339,69 @@ body { font-family: var(--font-base) !important; }
   min-width: 300px !important;
   max-width: 600px !important;
 }
+
+/* Elementos del header pegados a los bordes */
+.core-header-left {
+  margin-right: 0 !important;
+}
+.core-header-right {
+  margin-left: 0 !important;
+}
+.core-header {
+  justify-content: space-between !important;
+}
+.core-search {
+  flex: 1 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 0 16px !important;
+}
+
+/* Header alineado con la línea separadora — 32px */
+.core-header {
+  padding-left: 32px !important;
+  padding-right: 32px !important;
+}
+
+/* Header alineado con la línea separadora — 32px */
+.core-header {
+  padding-left: 32px !important;
+  padding-right: 32px !important;
+}
+
+/* Quitar box-shadow del header — la línea va inline en el JSX */
+.core-header {
+  box-shadow: none !important;
+}
+
+/* Contenedor central — variable fácil de cambiar */
+:root { --core-container: 1400px; }
+
+/* Navbar full width, contenido centrado */
+.core-tb {
+  width: 100% !important;
+}
+.core-header,
+.core-categories-menu {
+  max-width: var(--core-container) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  width: 100% !important;
+  padding-left: 32px !important;
+  padding-right: 32px !important;
+  box-sizing: border-box !important;
+}
+.core-main,
+.core-shdr,
+.core-grid,
+.core-dstrip,
+.core-cs-sticky {
+  max-width: var(--core-container) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 32px !important;
+  padding-right: 32px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
