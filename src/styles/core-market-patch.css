@@ -273,3 +273,13 @@ body { font-family: var(--font-base) !important; }
 /* Línea separadora — color cruzado con el botón de modo */
 [data-sh="false"] .core-header { border-bottom-color: #1D9E75 !important; }
 [data-sh="true"]  .core-header { border-bottom-color: #1A4F9C !important; }
+
+/* Línea separadora — ancho exacto del header */
+.core-header {
+  border-bottom: none !important;
+  padding-bottom: 8px !important;
+  margin-bottom: 2px !important;
+  box-shadow: 0 2px 0 0 #1D9E75 !important;
+}
+[data-sh="false"] .core-header { box-shadow: 0 2px 0 0 #1D9E75 !important; }
+[data-sh="true"]  .core-header { box-shadow: 0 2px 0 0 #1A4F9C !important; }
