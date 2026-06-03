@@ -472,3 +472,24 @@ body {
 .core-categories-menu::before {
   display: none !important;
 }
+
+/* Altura uniforme y espaciado igual entre elementos del header */
+.core-header {
+  gap: 12px !important;
+  align-items: center !important;
+}
+.core-search,
+.core-login-btn,
+.core-auth-btn,
+.core-header-right a,
+.core-header-right button {
+  height: 36px !important;
+  display: flex !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+}
+.core-header-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
