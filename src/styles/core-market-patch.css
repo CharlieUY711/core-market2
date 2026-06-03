@@ -428,3 +428,13 @@ body {
   padding-top: 0 !important;
   padding-bottom: 0 !important;
 }
+
+/* Separador exactamente alineado con el contenedor */
+.core-categories-menu::before {
+  left: 50% !important;
+  right: auto !important;
+  width: min(1400px, 100%) !important;
+  transform: translateX(-50%) !important;
+  padding: 0 32px !important;
+  box-sizing: border-box !important;
+}
