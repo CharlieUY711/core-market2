@@ -291,3 +291,15 @@ body { font-family: var(--font-base) !important; }
 /* Revertir — línea sin spread */
 [data-sh="false"] .core-header { box-shadow: 0 2px 0 0 #1D9E75 !important; }
 [data-sh="true"]  .core-header { box-shadow: 0 2px 0 0 #1A4F9C !important; }
+
+/* Header sin padding — los hijos tienen el margen */
+.core-header {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+.core-header-left {
+  padding-left: 32px !important;
+}
+.core-header-right {
+  padding-right: 32px !important;
+}
