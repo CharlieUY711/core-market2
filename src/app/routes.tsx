@@ -1,5 +1,5 @@
 import { createBrowserRouter, type RouteObject } from "react-router-dom";
-import CoreStorefront          from "./public/CoreStorefront";
+import MarketPage from './public/MarketPage';
 import CarritoPage             from "./public/CarritoPage";
 import CheckoutPage            from "./public/CheckoutPage";
 import OrdenPage               from "./public/OrdenPage";
@@ -24,8 +24,8 @@ import AdminEditor             from "./admin/editor/EditorPage";
 
 
 export const TODAS_LAS_RUTAS: (RouteObject & { id: string })[] = [
-  { id: "storefront",          path: "/",           Component: CoreStorefront },
-  { id: "tienda",              path: "/tienda",     Component: CoreStorefront },
+  { id: "storefront",          path: "/",           Component: MarketPage },
+  { id: "tienda",              path: "/tienda",     Component: MarketPage },
   { id: "carrito",             path: "/carrito",    Component: CarritoPage },
   { id: "checkout",            path: "/checkout",   Component: CheckoutPage },
   { id: "orden",               path: "/orden/:id",  Component: OrdenPage },
@@ -55,4 +55,5 @@ export const TODAS_LAS_RUTAS: (RouteObject & { id: string })[] = [
 ];
 
 export const router = createBrowserRouter(TODAS_LAS_RUTAS);
+
 
