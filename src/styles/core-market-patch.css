@@ -447,3 +447,28 @@ body {
   transform: none !important;
   padding: 0 !important;
 }
+
+/* Wrapper global */
+.core-tb > *,
+.core-header,
+.core-categories-menu,
+.core-main {
+  max-width: 1400px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 32px !important;
+  padding-right: 32px !important;
+  box-sizing: border-box !important;
+}
+
+/* Separador entre las dos barras */
+.core-categories-menu {
+  border-top: 1px solid rgba(255,255,255,.15) !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Quitar el pseudo-elemento que causa problemas */
+.core-categories-menu::before {
+  display: none !important;
+}
