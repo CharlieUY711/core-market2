@@ -314,3 +314,30 @@ body {
   margin: 0 auto !important;
   padding: 0 24px !important;
 }
+
+/* Barra de categorías — doble alto y alineada */
+.core-categories-menu {
+  height: 48px !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 24px !important;
+  max-width: 100% !important;
+}
+
+/* Buscador — ocupa todo el espacio libre */
+.core-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+.core-search {
+  flex: 1 !important;
+  max-width: none !important;
+  min-width: 0 !important;
+}
+.core-header-left {
+  flex-shrink: 0 !important;
+}
+.core-header-right {
+  flex-shrink: 0 !important;
+}
