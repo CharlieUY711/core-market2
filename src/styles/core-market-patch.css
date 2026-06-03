@@ -282,3 +282,19 @@ body {
 .core-tb *:not(.core-search):not(.core-search *) {
   color: #ffffff !important;
 }
+
+/* Header centrado con buscador acotado */
+.core-header {
+  max-width: 1280px !important;
+  margin: 0 auto !important;
+  padding: 6px 24px !important;
+}
+.core-search {
+  max-width: 480px !important;
+  width: 100% !important;
+}
+.core-categories-menu {
+  max-width: 1280px !important;
+  margin: 0 auto !important;
+  padding: 0 24px !important;
+}
