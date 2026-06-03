@@ -283,3 +283,7 @@ body { font-family: var(--font-base) !important; }
 }
 [data-sh="false"] .core-header { box-shadow: 0 2px 0 0 #1D9E75 !important; }
 [data-sh="true"]  .core-header { box-shadow: 0 2px 0 0 #1A4F9C !important; }
+
+/* Línea que llega exactamente a los bordes del header */
+[data-sh="false"] .core-header { box-shadow: 0 2px 0 32px #1D9E75 !important; }
+[data-sh="true"]  .core-header { box-shadow: 0 2px 0 32px #1A4F9C !important; }
