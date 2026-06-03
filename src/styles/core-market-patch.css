@@ -438,3 +438,12 @@ body {
   padding: 0 32px !important;
   box-sizing: border-box !important;
 }
+
+/* Separador alineado exactamente con el contenido */
+.core-categories-menu::before {
+  left: 32px !important;
+  right: 32px !important;
+  width: auto !important;
+  transform: none !important;
+  padding: 0 !important;
+}
