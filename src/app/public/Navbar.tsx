@@ -147,7 +147,7 @@ export function Navbar({
           onClick={toggleMode}
           style={{
             ...elStyle,
-            width: 96, minWidth: 96, maxWidth: 96, justifyContent: 'center', background: modeBg,
+            width: 144, minWidth: 144, maxWidth: 144, justifyContent: 'center', background: modeBg,
             border: 'none', borderRadius: 4, cursor: 'pointer',
             fontFamily: T.font, fontSize: 11, fontWeight: 700,
             letterSpacing: '0.1em', textTransform: 'uppercase',
@@ -186,7 +186,7 @@ export function Navbar({
             to="/dashboard/ordenes"
             style={{
               ...elStyle,
-              width: 96, minWidth: 96, maxWidth: 96, justifyContent: 'center', gap: 6, background: btnBg, borderRadius: 4, border: 'none',
+              width: 144, minWidth: 144, maxWidth: 144, justifyContent: 'center', gap: 6, background: btnBg, borderRadius: 4, border: 'none',
               color: T.white, textDecoration: 'none',
               fontFamily: T.font, fontSize: '0.85rem', fontWeight: 700,
               transition: 'background 200ms ease', flexShrink: 0,
@@ -204,7 +204,7 @@ export function Navbar({
             onClick={onLoginClick}
             style={{
               ...elStyle,
-              width: 96, minWidth: 96, maxWidth: 96, justifyContent: 'center', background: btnBg, borderRadius: 4, border: 'none',
+              width: 144, minWidth: 144, maxWidth: 144, justifyContent: 'center', background: btnBg, borderRadius: 4, border: 'none',
               color: T.white, cursor: 'pointer',
               fontFamily: T.font, fontSize: '0.85rem', fontWeight: 700,
               transition: 'background 200ms ease', flexShrink: 0,
@@ -320,5 +320,6 @@ export function Navbar({
     </header>
   );
 }
+
 
 

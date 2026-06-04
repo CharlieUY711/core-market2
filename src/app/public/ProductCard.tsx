@@ -718,7 +718,6 @@ function FlipCard({ p, onAdd, onFlipped, deptColors, cartItems, isInCart }: {
                   )}
                 </>
               )}
-              <div className="core-dept-label" style={{ color: (() => { const c = deptColors[p.d] || "#1A4F9C"; const r = parseInt(c.slice(1,3),16); const g = parseInt(c.slice(3,5),16); const b = parseInt(c.slice(5,7),16); return (r*299+g*587+b*114)/1000 > 128 ? "#0D2B55" : "#ffffff"; })() }}>{p.d}</div>
             </div>
           </div>
 
@@ -733,8 +732,10 @@ function FlipCard({ p, onAdd, onFlipped, deptColors, cartItems, isInCart }: {
           </div>
 
           <div className="core-bottom">
-            <button className="core-add-btn" onClick={handleAdd} disabled={p.stock === 0} style={p.stock === 0 ? { background: '#ccc', cursor: 'not-allowed', color: '#888' } : btnStyle}>
-              {p.stock === 0 ? 'Sin stock' : label}
+            <button className="core-add-btn" onClick={handleAdd} disabled={p.stock === 0} style={{...(p.stock===0?{background:'#ccc',cursor:'not-allowed',color:'#888'}:btnStyle),display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 10px',width:'100%',gap:'6px'}}>
+              <span style={{fontSize:'0.68rem',fontWeight:700,textTransform:'uppercase',flexShrink:0,pointerEvents:'none'}}>{p.d}</span>
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              <span style={{fontSize:'0.72rem',fontWeight:800,textTransform:'uppercase',flexShrink:0,pointerEvents:'none'}}>{p.stock===0?'Sin stock':'COMPRAR'}</span>
             </button>
           </div>
         </div>
@@ -820,14 +821,7 @@ function FlipCard({ p, onAdd, onFlipped, deptColors, cartItems, isInCart }: {
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              <div style={{ 
-                color: '#000000', 
-                fontSize: '0.75rem', 
-                fontWeight: 'bold',
-                textAlign: 'center',
-                whiteSpace: 'nowrap'
-              }}>{p.d}</div>
-            </div>
+                          </div>
             {/* Información igual a la primera tarjeta */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', width: '100%', gap: '8px' }}>
@@ -943,8 +937,10 @@ function FlipCard({ p, onAdd, onFlipped, deptColors, cartItems, isInCart }: {
             </div>
           </div>
           <div className="core-bottom">
-            <button className="core-add-btn" onClick={handleAdd} disabled={p.stock === 0} style={p.stock === 0 ? { background: '#ccc', cursor: 'not-allowed', color: '#888' } : btnStyle}>
-              {p.stock === 0 ? 'Sin stock' : label}
+            <button className="core-add-btn" onClick={handleAdd} disabled={p.stock === 0} style={{...(p.stock===0?{background:'#ccc',cursor:'not-allowed',color:'#888'}:btnStyle),display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 10px',width:'100%',gap:'6px'}}>
+              <span style={{fontSize:'0.68rem',fontWeight:700,textTransform:'uppercase',flexShrink:0,pointerEvents:'none'}}>{p.d}</span>
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              <span style={{fontSize:'0.72rem',fontWeight:800,textTransform:'uppercase',flexShrink:0,pointerEvents:'none'}}>{p.stock===0?'Sin stock':'COMPRAR'}</span>
             </button>
           </div>
         </div>
