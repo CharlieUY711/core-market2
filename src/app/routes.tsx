@@ -1,4 +1,4 @@
-import { createBrowserRouter, type RouteObject } from "react-router-dom";
+﻿import { createBrowserRouter, type RouteObject } from "react-router-dom";
 import MarketPage from './public/MarketPage';
 import CarritoPage             from "./public/CarritoPage";
 import CheckoutPage            from "./public/CheckoutPage";
@@ -21,6 +21,7 @@ import AdminImport             from "./admin/pages/AdminImport";
 import AdminArticulos          from "./admin/pages/AdminArticulos";
 import AdminBiblioteca         from "./admin/pages/AdminBiblioteca";
 import AdminEditor             from "./admin/editor/EditorPage";
+import AdminApiVault           from "./admin/pages/AdminApiVault";
 
 
 export const TODAS_LAS_RUTAS: (RouteObject & { id: string })[] = [
@@ -50,10 +51,13 @@ export const TODAS_LAS_RUTAS: (RouteObject & { id: string })[] = [
 
       { id: "admin-catalog", path: "catalog", Component: AdminCatalog },
       { id: "admin-ml",             path: "ml",            Component: AdminML },
+      { id: "admin-api-vault",      path: "api-vault",     Component: AdminApiVault },
     ] as RouteObject[],
   },
 ];
 
 export const router = createBrowserRouter(TODAS_LAS_RUTAS);
+
+
 
 

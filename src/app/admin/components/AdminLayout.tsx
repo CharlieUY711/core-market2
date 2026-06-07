@@ -86,6 +86,7 @@ export default function AdminLayout() {
     { path: "/admin/catalog", label: "📋 Catálogo", children: [{ path: "/admin/catalog/articulos", label: "📝 Artículos" }] },
     { path: "/admin/analytics", label: "📈 Analytics" },
     { path: "/admin/ml",        label: "🟡 MercadoLibre" },
+    { path: "/admin/api-vault", label: "🔑 API Vault" },
   ];
 
   const isActive = (path: string, exact?: boolean) =>
@@ -222,3 +223,5 @@ export default function AdminLayout() {
     </div>
   );
 }
+
+
