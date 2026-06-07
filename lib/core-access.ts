@@ -4,7 +4,7 @@
 
 function b64url(bytes: Uint8Array): string {
   let bin = ''
-  for (const b of bytes) bin += String.fromCharCode(b)
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i])
   return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 function fromB64url(s: string): Uint8Array {
