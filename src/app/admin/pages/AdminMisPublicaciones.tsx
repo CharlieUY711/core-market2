@@ -1,3 +1,39 @@
+
+function SyncDropdown({ onSyncML }: { onSyncML: () => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ position:"relative" }}>
+      <button onClick={() => setOpen(p => !p)} style={{
+        padding:"0.25rem 0.6rem", fontSize:"0.75rem", fontWeight:700,
+        border:"1px solid #FFE600", borderRadius:6, background:"#fff",
+        color:"#333", cursor:"pointer", display:"flex", alignItems:"center", gap:4,
+      }}>Sync ▾</button>
+      {open && (
+        <div style={{ position:"absolute", top:"110%", left:0, background:"#fff",
+          border:"1.5px solid #E5E7EB", borderRadius:8, zIndex:200,
+          boxShadow:"0 4px 16px rgba(0,0,0,.1)", minWidth:120 }}
+          onMouseLeave={() => setOpen(false)}>
+          <button onClick={() => { onSyncML(); setOpen(false); }} style={{
+            display:"block", width:"100%", padding:"0.5rem 1rem", textAlign:"left",
+            fontSize:"0.78rem", fontWeight:700, border:"none", background:"none",
+            cursor:"pointer", color:"#333",
+          }}>🟡 ML</button>
+          <button disabled style={{
+            display:"block", width:"100%", padding:"0.5rem 1rem", textAlign:"left",
+            fontSize:"0.78rem", fontWeight:600, border:"none", background:"none",
+            cursor:"not-allowed", color:"#9CA3AF",
+          }}>🔵 Meta</button>
+          <button disabled style={{
+            display:"block", width:"100%", padding:"0.5rem 1rem", textAlign:"left",
+            fontSize:"0.78rem", fontWeight:600, border:"none", background:"none",
+            cursor:"not-allowed", color:"#9CA3AF",
+          }}>🟢 WA</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../../utils/supabase/client";
@@ -81,6 +117,34 @@ export default function AdminPublicaciones() {
   const [visibleCols, setVisibleCols]   = useState<Set<string>>(new Set(["alta"]));
   const [showColPicker, setShowColPicker] = useState(false);
   const [toast, setToast] = useState<{text:string;ok:boolean}|null>(null);
+  const [mlSyncing, setMlSyncing] = useState<Set<string>>(new Set());
+  const [mlErrors,  setMlErrors]  = useState<Record<string, string>>({});
+
+  const syncML = async (ids: string[]) => {
+    setMlSyncing(prev => { const n = new Set(prev); ids.forEach(id => n.add(id)); return n; });
+    const results = await Promise.all(ids.map(async id => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ml-sync`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}` },
+          body: JSON.stringify({ action: "sync_item", product_id: id }),
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || json.message || "Error");
+        return { id, ok: true };
+      } catch (e: any) {
+        return { id, ok: false, error: e.message };
+      }
+    }));
+    setMlSyncing(prev => { const n = new Set(prev); ids.forEach(id => n.delete(id)); return n; });
+    const errors: Record<string, string> = {};
+    let okCount = 0;
+    results.forEach(r => { if (r.ok) okCount++; else errors[r.id] = r.error; });
+    setMlErrors(prev => ({ ...prev, ...errors }));
+    if (okCount > 0) { notify(`${okCount} producto(s) sincronizados con ML`); load(); }
+    if (Object.keys(errors).length > 0) notify(`${Object.keys(errors).length} error(s) al sincronizar`, false);
+  };
 
   const notify = (text: string, ok = true) => {
     setToast({text,ok}); setTimeout(()=>setToast(null), 3000);
@@ -102,20 +166,17 @@ export default function AdminPublicaciones() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Ordenar por header
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc");
     else { setSortKey(key); setSortDir("asc"); }
   };
 
-  // Ciclar filtro status al hacer click en header Estado
   const cycleStatus = () => {
     const opts = [null, "active", "draft", "paused"];
     const idx = opts.indexOf(filterStatus);
     setFilterStatus(opts[(idx+1)%opts.length]);
   };
 
-  // Selección
   const toggleAll = () => {
     if (selected.size === filtered.length) setSelected(new Set());
     else setSelected(new Set(filtered.map(a => a.id)));
@@ -128,10 +189,9 @@ export default function AdminPublicaciones() {
     setEditing(null);
   };
 
-  // Edición inline
   const startEdit = (a: Articulo) => {
     setEditForm({ nombre:a.nombre, descripcion:a.descripcion, precio:a.precio,
-      precio_original:a.precio_original, stock:a.stock, condicion:a.condicion,
+      precio_original:(a as any).precio_original, stock:a.stock, condicion:a.condicion,
       departamento_nombre:a.departamento_nombre });
     setEditing(a.id);
   };
@@ -144,7 +204,6 @@ export default function AdminPublicaciones() {
     setEditing(null);
   };
 
-  // Acciones
   const cambiarStatus = async (id: string, status: string) => {
     await supabase.from("articulos").update({ status }).eq("id", id);
     setArticulos(prev => prev.map(a => a.id===id ? {...a,status} : a));
@@ -174,7 +233,6 @@ export default function AdminPublicaciones() {
     notify("Eliminado");
   };
 
-  // Lote
   const accionLote = async (accion: string) => {
     const ids = Array.from(selected);
     if (!ids.length) return;
@@ -189,7 +247,6 @@ export default function AdminPublicaciones() {
     setSelected(new Set()); load();
   };
 
-  // Filtrar y ordenar
   let filtered = articulos.filter(a => {
     if (isSH && a.tipo !== "secondhand") return false;
     if (!isSH && a.tipo !== "market") return false;
@@ -220,7 +277,6 @@ export default function AdminPublicaciones() {
 
   const color = isSH ? GREEN : ACCENT;
 
-  // Estilos
   const thBase: React.CSSProperties = {
     padding:"0.5rem 0.75rem", textAlign:"left", fontSize:"11px",
     fontWeight:700, color:"#6B7280", textTransform:"uppercase",
@@ -242,8 +298,6 @@ export default function AdminPublicaciones() {
     width:"100%", padding:"0.4rem 0.6rem", border:"1.5px solid #E5E7EB",
     borderRadius:6, fontSize:"0.82rem", outline:"none", fontFamily:"DM Sans,sans-serif",
   };
-
-  const actionBtn = (label: string, onClick: ()=>void, bg: string, color2: string, border?: string): React.CSSProperties => ({});
 
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:"1rem" }}>
@@ -267,7 +321,6 @@ export default function AdminPublicaciones() {
           </p>
         </div>
         <div style={{ display:"flex", gap:"0.75rem", alignItems:"center" }}>
-          {/* Toggle MKT/SH — botón físico */}
           <div style={{ display:"flex", borderRadius:12, overflow:"hidden",
             boxShadow:"0 4px 10px rgba(0,0,0,.15), inset 0 1px 0 rgba(255,255,255,.2)",
             border:"1px solid rgba(0,0,0,.08)", flexShrink:0, width:260 }}>
@@ -290,7 +343,6 @@ export default function AdminPublicaciones() {
               transition:"all .12s",
             }}>Second Hand</button>
           </div>
-          {/* Nuevo artículo */}
           <button onClick={() => navigate("/admin/catalog/articulos")} style={{
             padding:"0.6rem 1.25rem", background:color, color:"#fff",
             border:"none", borderRadius:10, fontWeight:700, fontSize:"0.875rem",
@@ -319,10 +371,13 @@ export default function AdminPublicaciones() {
       <div style={{ display:"flex", gap:"0.5rem", alignItems:"center" }}>
         {selected.size > 0 && (
           <div style={{ display:"flex", gap:"4px", padding:"0.3rem 0.75rem",
-            background:"rgba(15,52,96,.06)", borderRadius:8, border:`1px solid ${BLUE}` }}>
+            background:"rgba(15,52,96,.06)", borderRadius:8, border:`1px solid ${BLUE}`, alignItems:"center" }}>
             <span style={{ fontSize:"0.78rem", color:BLUE, fontWeight:700, marginRight:"4px" }}>
               {selected.size} sel.
             </span>
+            {/* Sync dropdown */}
+            <SyncDropdown onSyncML={() => syncML(Array.from(selected))} />
+            {/* Artículo actions */}
             {[
               { id:"activar",  label:"✓ Activar",  c:GREEN },
               { id:"pausar",   label:"⏸ Pausar",   c:"#F59E0B" },
@@ -459,10 +514,29 @@ export default function AdminPublicaciones() {
                           background:cfg.bg, color:cfg.color, fontWeight:700 }}>{cfg.label}</span>
                       </td>
                       <td style={{ ...td, textAlign:"center" }}>
-                        <div style={{ display:"flex", gap:"4px", justifyContent:"center" }}>
-                          {[{k:"sync_ml",icon:"🟡"},{k:"sync_meta",icon:"🔵"},{k:"sync_wa",icon:"🟢"}].map(s=>(
-                            <span key={s.k} style={{ fontSize:"13px", opacity:(a as any)[s.k]?1:0.2 }}>{s.icon}</span>
-                          ))}
+                        <div style={{ display:"flex", gap:"4px", justifyContent:"center", alignItems:"center" }}>
+                          {/* ML badge — clickeable */}
+                          {(() => {
+                            const synced  = !!(a as any)["sync_ml"];
+                            const syncing = mlSyncing.has(a.id);
+                            const hasErr  = !!mlErrors[a.id];
+                            const bg      = syncing ? "#E5E7EB" : hasErr ? "#EF4444" : synced ? "#FFE600" : "transparent";
+                            const border  = syncing ? "#E5E7EB" : hasErr ? "#EF4444" : "#FFE600";
+                            const tc      = hasErr ? "#fff" : "#333";
+                            return (
+                              <button
+                                title={hasErr ? mlErrors[a.id] : synced ? "Sincronizado — click para re-sync" : "Click para publicar en ML"}
+                                disabled={syncing}
+                                onClick={() => syncML([a.id])}
+                                style={{ padding:"2px 7px", fontSize:"10px", fontWeight:700,
+                                  border:`1.5px solid ${border}`, borderRadius:5, cursor:"pointer",
+                                  background:bg, color:tc, opacity:syncing?0.5:1, transition:"all .2s" }}>
+                                {syncing ? "…" : "ML"}
+                              </button>
+                            );
+                          })()}
+                          <span style={{ fontSize:"13px", opacity:(a as any)["sync_meta"]?1:0.2 }}>🔵</span>
+                          <span style={{ fontSize:"13px", opacity:(a as any)["sync_wa"]?1:0.2 }}>🟢</span>
                         </div>
                       </td>
                       <td style={td}>{a.departamento_nombre||"—"}</td>
@@ -490,7 +564,6 @@ export default function AdminPublicaciones() {
                           <div style={{ padding:"1.25rem", background:"#F9FAFB",
                             display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1.25rem" }}>
 
-                            {/* INFO / EDICIÓN INLINE */}
                             <div>
                               <div style={{ display:"flex", justifyContent:"space-between",
                                 alignItems:"center", marginBottom:"0.75rem" }}>
@@ -552,10 +625,7 @@ export default function AdminPublicaciones() {
                               )}
                             </div>
 
-                            {/* COLUMNA DERECHA: ACCIONES + PUBLICAR EN + MÉTRICAS */}
                             <div style={{ display:"flex", flexDirection:"column", gap:"1rem" }}>
-
-                              {/* Estilo título compartido */}
                               {(() => {
                                 const tit: React.CSSProperties = {
                                   fontSize:"0.7rem", fontWeight:700, color:"#9CA3AF",
@@ -574,7 +644,6 @@ export default function AdminPublicaciones() {
                                 });
                                 return (
                                   <>
-                                    {/* ACCIONES */}
                                     <div>
                                       <div style={tit}>Acciones</div>
                                       <div style={{ ...grid3, marginBottom:"5px" }}>
@@ -597,7 +666,6 @@ export default function AdminPublicaciones() {
                                       </div>
                                     </div>
 
-                                    {/* PUBLICAR EN */}
                                     <div>
                                       <div style={tit}>Publicar en</div>
                                       <div style={{ ...grid4, marginBottom:"4px" }}>
@@ -620,27 +688,8 @@ export default function AdminPublicaciones() {
                                           );
                                         })}
                                       </div>
-                                      <div style={grid4}>
-                                        {[
-                                          {label:"Ver ML",  syncKey:"sync_ml"},
-                                          {label:"Ver Meta",syncKey:"sync_meta"},
-                                          {label:"Ver WA",  syncKey:"sync_wa"},
-                                          {label:"Mi web",  syncKey:""},
-                                        ].map(s=>{
-                                          const synced = s.syncKey ? !!(a as any)[s.syncKey] : true;
-                                          return (
-                                            <button key={s.label} style={{
-                                              padding:"0.4rem 0.1rem",fontSize:"10px",fontWeight:600,
-                                              border:"1.5px solid #E5E7EB",borderRadius:6,
-                                              background:"#fff",color:"#6B7280",cursor:"pointer",
-                                              opacity: synced ? 1 : 0.4,
-                                            }}>{s.label}</button>
-                                          );
-                                        })}
-                                      </div>
                                     </div>
 
-                                    {/* MÉTRICAS */}
                                     <div>
                                       <div style={tit}>Métricas</div>
                                       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:"5px" }}>
@@ -661,7 +710,6 @@ export default function AdminPublicaciones() {
                                       </div>
                                     </div>
 
-                                    {/* DIVIDER + GUARDAR/CANCELAR */}
                                     {isEd && (
                                       <>
                                         <hr style={{border:"none",borderTop:"1px solid #E5E7EB",margin:"0"}}/>
@@ -699,5 +747,3 @@ export default function AdminPublicaciones() {
     </div>
   );
 }
-
-
