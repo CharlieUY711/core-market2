@@ -278,435 +278,161 @@ export const DIMENSIONS = {
 export const S = {
   root:          { display:"flex", flexDirection:"column", height:"100%",
                    background:"#F2F5FA", color:"#0D2B55",
-                   fontFamily:"Calibri, 'Segoe UI', system-ui, sans-serif",
+                   fontFamily:"Calibri,'Segoe UI',system-ui,sans-serif",
                    fontSize:13, overflow:"hidden" },
 
   topbar:        { height:44, background:"#0D2B55",
                    borderBottom:"1px solid #081C38",
                    display:"flex", alignItems:"center",
                    gap:4, padding:"0 8px", flexShrink:0,
-                   boxShadow:"0 2px 8px rgba(13,43,85,.14)" },
+                   boxShadow:"0 2px 8px rgba(13,43,85,.12)" },
 
   logo:          { fontSize:13, fontWeight:700, letterSpacing:2,
                    color:"#fff", padding:"0 14px",
                    borderRight:"1px solid rgba(255,255,255,.12)" },
 
-  logoAccent:    { color:"#C9A84C" },    // span dentro del logo
-
+  logoAccent:    { color:"#C9A84C" },
   tbGroup:       { display:"flex", alignItems:"center", gap:2,
-                   padding:"0 8px", borderRight:"1px solid rgba(255,255,255,.12)" },
+                   padding:"0 8px", borderRight:"1px solid rgba(255,255,255,.1)" },
 
-  tbBtn:         { background:"none", border:"none", color:"rgba(255,255,255,.7)",
+  tbBtn:         { background:"none", border:"none", color:"rgba(255,255,255,.75)",
                    padding:"4px 9px", borderRadius:4,
-                   cursor:"pointer", fontSize:11, fontFamily:"inherit" },
+                   cursor:"pointer", fontSize:11, fontFamily:"inherit", fontWeight:500 },
 
   tbBtnAccent:   { background:"#C9A84C", color:"#fff" },
-  tbBtnDanger:   { color:"#dc2626" },
+  tbBtnDanger:   { color:"#C0392B" },
   tbBtnDim:      { opacity: 0.35 },
 
   btnPrimary:    { background:"#1A4F9C", color:"#fff", border:"none",
-                   borderRadius:4, padding:"5px 12px",
+                   borderRadius:4, padding:"5px 14px",
                    cursor:"pointer", fontSize:11, fontFamily:"inherit",
-                   fontWeight:600, letterSpacing:"0.05em" },
+                   fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase" },
 
   btnAccent:     { background:"#C9A84C", marginLeft:4 },
-
   main:          { display:"flex", flex:1, overflow:"hidden" },
 
-  toolsPanel:    { width:56, background:"#fff",
-                   borderRight:"1px solid #C8D5E8",
+  toolsPanel:    { width:52, background:"#0D2B55",
+                   borderRight:"1px solid #081C38",
                    display:"flex", flexDirection:"column",
                    alignItems:"center", padding:"8px 0",
                    gap:2, flexShrink:0 },
 
   toolBtn:       { width:34, height:34, border:"none", background:"none",
-                   color:"#aaa", borderRadius:5, cursor:"pointer",
-                   fontSize:16, transition:"all .15s" },
+                   color:"rgba(255,255,255,.45)", borderRadius:5,
+                   cursor:"pointer", fontSize:16, transition:"all .15s" },
 
-  toolActive:    { background:"#1A4F9C", color:"#fff" },
+  toolActive:    { background:"rgba(201,168,76,.15)", color:"#C9A84C" },
 
-  canvasWrap:    { flex:1, background:"#e8e6e0",
-                   display:"flex", alignItems:"center",
-                   justifyContent:"center",
+  canvasWrap:    { flex:1, background:"#E8EDF5",
+                   display:"flex", alignItems:"center", justifyContent:"center",
                    position:"relative", overflow:"hidden" },
 
   checker:       { position:"absolute", inset:0,
                    backgroundImage: [
-                     "linear-gradient(45deg,#ddd 25%,transparent 25%)",
-                     "linear-gradient(-45deg,#ddd 25%,transparent 25%)",
-                     "linear-gradient(45deg,transparent 75%,#ddd 75%)",
-                     "linear-gradient(-45deg,transparent 75%,#ddd 75%)",
+                     "linear-gradient(45deg,#C8D5E8 25%,transparent 25%)",
+                     "linear-gradient(-45deg,#C8D5E8 25%,transparent 25%)",
+                     "linear-gradient(45deg,transparent 75%,#C8D5E8 75%)",
+                     "linear-gradient(-45deg,transparent 75%,#C8D5E8 75%)",
                    ].join(","),
                    backgroundSize:"14px 14px",
                    backgroundPosition:"0 0,0 7px,7px -7px,-7px 0",
-                   pointerEvents:"none" },
+                   pointerEvents:"none", opacity:0.4 },
 
   dropZone:      { position:"absolute", inset:0,
                    display:"flex", flexDirection:"column",
                    alignItems:"center", justifyContent:"center", gap:8 },
 
-  cropOverlay:   { position:"absolute", border:"2px solid #00d4aa",
-                   background:"rgba(0,212,170,.05)",
-                   pointerEvents:"none" },
+  cropOverlay:   { position:"absolute", border:"2px solid #C9A84C",
+                   background:"rgba(201,168,76,.05)", pointerEvents:"none" },
 
   cropThirdH:    { position:"absolute", top:0, bottom:0,
-                   borderLeft:"1px solid rgba(255,255,255,.25)" },
+                   borderLeft:"1px solid rgba(255,255,255,.3)" },
 
   cropThirdV:    { position:"absolute", left:0, right:0,
-                   borderTop:"1px solid rgba(255,255,255,.25)" },
+                   borderTop:"1px solid rgba(255,255,255,.3)" },
 
-  rightPanel:    { width:280, background:"#fff",
+  rightPanel:    { width:300, background:"#fff",
                    borderLeft:"1px solid #C8D5E8",
                    display:"flex", flexDirection:"column",
                    flexShrink:0, overflow:"hidden" },
 
-  panelTabs:     { display:"flex", borderBottom:"1px solid #C8D5E8",
-                   background:"#F2F5FA", flexShrink:0 },
+  panelTabs:     { display:"flex", borderBottom:"2px solid #C8D5E8",
+                   flexShrink:0, background:"#F2F5FA" },
 
   ptab:          { flex:1, background:"none", border:"none", color:"#7A7A7A",
-                   padding:"9px 2px", cursor:"pointer", fontSize:10,
-                   fontWeight:600, letterSpacing:.5, textTransform:"uppercase",
-                   borderBottom:"2px solid transparent",
+                   padding:"10px 2px", cursor:"pointer", fontSize:11,
+                   fontWeight:600, letterSpacing:".06em", textTransform:"uppercase",
+                   borderBottom:"2px solid transparent", marginBottom:"-2px",
                    transition:"all .15s" },
 
   ptabActive:    { color:"#1A4F9C", borderBottomColor:"#1A4F9C", background:"#fff" },
+  panelScroll:   { padding:"10px 12px 20px", overflowY:"auto", flex:1 },
 
-  panelScroll:   { padding:"10px 10px 20px", overflowY:"auto", flex:1 },
-
-  // ── Sección IA ───────────────────────────────────────────
-  aiBanner:      { background:"#faf5ff", border:"1px solid #e9d5ff",
+  aiBanner:      { background:"rgba(26,79,156,.04)", border:"1px solid #C8D5E8",
                    borderRadius:6, padding:10, marginBottom:4 },
 
-  aiBadge:       { fontSize:8, background:"#f3e8ff", color:"#7c3aed",
-                   border:"1px solid #d8b4fe",
-                   padding:"2px 6px", borderRadius:3 },
+  aiBadge:       { fontSize:9, background:"rgba(124,58,237,.1)", color:"#7c3aed",
+                   border:"1px solid rgba(124,58,237,.2)",
+                   padding:"2px 6px", borderRadius:3, fontWeight:600 },
 
   bgPreview:     { width:"100%", height:76, borderRadius:4,
-                   border:"1px solid #e0e0e0", overflow:"hidden",
-                   marginBottom:8,
-                   background:"repeating-conic-gradient(#ddd 0% 25%,#f5f5f5 0% 50%) 0 0/12px 12px" },
+                   border:"1px solid #C8D5E8", overflow:"hidden", marginBottom:8,
+                   background:"repeating-conic-gradient(#E8EDF5 0% 25%,#F2F5FA 0% 50%) 0 0/12px 12px" },
 
-  // ── Botones de acción ────────────────────────────────────
   applyBtn:      { width:"100%", background:"#1A4F9C", color:"#fff",
-                   border:"none", borderRadius:4, padding:7,
+                   border:"none", borderRadius:4, padding:8,
                    cursor:"pointer", fontSize:11, fontFamily:"inherit",
-                   fontWeight:600 },
+                   fontWeight:600, letterSpacing:"0.06em", textTransform:"uppercase" },
 
-  applyBtnGhost: { background:"transparent", color:"#7A7A7A",
-                   border:"1px solid #C8D5E8" },
-
+  applyBtnGhost: { background:"transparent", color:"#7A7A7A", border:"1px solid #C8D5E8" },
   applyBtnAI:    { background:"#7c3aed" },
 
-  // ── Format buttons ───────────────────────────────────────
-  fmtBtn:        { background:"#f5f5f3", border:"1px solid #e0ddd5",
-                   color:"#555", borderRadius:4, padding:"6px 4px",
-                   cursor:"pointer", fontSize:10, textAlign:"center" },
+  fmtBtn:        { background:"#F2F5FA", border:"1px solid #C8D5E8",
+                   color:"#4A4A4A", borderRadius:4, padding:"7px 4px",
+                   cursor:"pointer", fontSize:11, textAlign:"center" },
 
-  fmtBtnLabel:   { fontSize:11, fontWeight:600, color:"#222" },
-  fmtBtnSub:     { fontSize:8, color:"#aaa" },
+  fmtBtnLabel:   { fontSize:12, fontWeight:600, color:"#0D2B55" },
+  fmtBtnSub:     { fontSize:9, color:"#7A7A7A" },
 
-  // ── Output format buttons ────────────────────────────────
-  outBtn:        { flex:1, background:"#f5f5f3", border:"1px solid #e0ddd5",
-                   color:"#888", borderRadius:3, padding:5,
-                   cursor:"pointer", fontSize:10, textAlign:"center" },
+  outBtn:        { flex:1, background:"#F2F5FA", border:"1px solid #C8D5E8",
+                   color:"#7A7A7A", borderRadius:4, padding:6,
+                   cursor:"pointer", fontSize:11, textAlign:"center", fontWeight:500 },
 
   outBtnActive:  { background:"#1A4F9C", borderColor:"#1A4F9C", color:"#fff" },
 
-  // ── Cards de info ────────────────────────────────────────
-  sizeCard:      { fontSize:10, color:"#888", background:"#f5f5f3",
-                   padding:"6px 8px", borderRadius:3,
-                   display:"flex", justifyContent:"space-between",
-                   alignItems:"center" },
+  sizeCard:      { fontSize:11, color:"#7A7A7A", background:"#F2F5FA",
+                   padding:"7px 10px", borderRadius:4, border:"1px solid #C8D5E8",
+                   display:"flex", justifyContent:"space-between", alignItems:"center" },
 
-  sizeCardValue:         { color:"#16a34a", fontWeight:500 },  // tamaño estimado
-  sizeCardValueAccent:   { color:"#00d4aa", fontWeight:500 },  // dimensiones
+  sizeCardValue:       { color:"#1D9E75", fontWeight:600 },
+  sizeCardValueAccent: { color:"#1A4F9C", fontWeight:600 },
 
-  // ── Inputs numéricos ────────────────────────────────────
-  numInput:      { width:"100%", background:"#f5f5f3",
-                   border:"1px solid #e0ddd5", color:"#222",
-                   borderRadius:3, padding:"4px 6px",
-                   fontSize:10, fontFamily:"inherit" },
+  numInput:      { width:"100%", background:"#fff",
+                   border:"1px solid #C8D5E8", color:"#0D2B55",
+                   borderRadius:4, padding:"5px 8px",
+                   fontSize:12, fontFamily:"inherit" },
 
-  // ── Status bar ──────────────────────────────────────────
-  statusbar:     { height:32, background:"#F2F5FA",
-                   borderTop:"1px solid #C8D5E8",
+  statusbar:     { height:32, background:"#0D2B55",
+                   borderTop:"1px solid #081C38",
                    display:"flex", alignItems:"center",
-                   padding:"0 14px", gap:16, flexShrink:0 },
+                   padding:"0 12px", gap:16, flexShrink:0 },
 
-  statItem:      { fontSize:10, color:"#3a3a3a",
-                   display:"flex", gap:4 },
+  statItem:      { fontSize:11, color:"rgba(255,255,255,.5)", display:"flex", gap:4 },
+  statValue:     { color:"rgba(255,255,255,.8)" },
 
-  statValue:     { color:"#666" },
+  zoomCtrl:      { marginLeft:"auto", display:"flex", gap:4, alignItems:"center" },
 
-  // ── Zoom controls ───────────────────────────────────────
-  zoomCtrl:      { marginLeft:"auto", display:"flex",
-                   gap:4, alignItems:"center" },
+  zoomBtn:       { background:"none", border:"1px solid rgba(255,255,255,.2)",
+                   color:"rgba(255,255,255,.6)", width:22, height:22,
+                   borderRadius:3, cursor:"pointer", fontSize:12,
+                   lineHeight:1, fontFamily:"inherit" },
 
-  zoomBtn:       { background:"none", border:"1px solid #e0ddd5",
-                   color:"#aaa", width:22, height:22,
-                   borderRadius:3, cursor:"pointer",
-                   fontSize:12, lineHeight:1, fontFamily:"inherit" },
+  zoomFitBtn:    { width:"auto", padding:"0 8px", fontSize:10 },
+  zoomPct:       { fontSize:11, color:"rgba(255,255,255,.5)" },
 
-  zoomFitBtn:    { width:"auto", padding:"0 8px", fontSize:9 },
-
-  zoomPct:       { fontSize:10, color:"#aaa",
-                   minWidth:36, textAlign:"center" },
-
-  // ── Slider row ──────────────────────────────────────────
-  sliderRow:     { display:"flex", alignItems:"center",
-                   gap:6, marginBottom:5 },
-
-  sliderLabel:   { fontSize:10, color:"#777",
-                   width:72, flexShrink:0 },
-
-  sliderValue:   { fontSize:10, color:"#00d4aa",
-                   width:26, textAlign:"right", flexShrink:0 },
-
-  // ── Section header ──────────────────────────────────────
-  sectionHeader: { display:"flex", alignItems:"center",
-                   justifyContent:"space-between",
-                   marginBottom:6, marginTop:12 },
-
-  sectionLabel:  { fontSize:9, letterSpacing:1.5,
-                   color:"#444", textTransform:"uppercase" },
-
-  resetBtn:      { background:"none", border:"none", color:"#444",
-                   cursor:"pointer", fontSize:9, padding:"2px 4px" },
-
-  // ── Filter thumb ────────────────────────────────────────
-  filterThumb:        { background:"#f5f5f3",
-                        border:"1.5px solid #ddd",
-                        borderRadius:5, cursor:"pointer",
-                        overflow:"hidden", transition:"border-color .15s" },
-
-  filterThumbActive:  { border:"1.5px solid #00d4aa",
-                        boxShadow:"0 0 0 1px #00d4aa" },
-
-  filterCanvas:       { width:"100%", height:46, display:"block" },
-
-  filterName:         { fontSize:8, textAlign:"center",
-                        padding:"3px 0", color:"#999" },
-
-  filterNameActive:   { color:"#00d4aa" },
+  zoomInput:     { width:48, textAlign:"center", fontSize:11,
+                   background:"rgba(255,255,255,.08)",
+                   border:"1px solid rgba(255,255,255,.2)",
+                   borderRadius:3, padding:"2px 4px",
+                   fontFamily:"inherit", color:"#fff" },
 };
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 6. DATOS — FILTROS
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-export const FILTERS = [
-  { name:"Original", id:"none",   css:"none" },
-  { name:"Vivid",    id:"vivid",  css:"saturate(1.8) contrast(1.1)" },
-  { name:"Fade",     id:"fade",   css:"opacity(0.9) saturate(0.65) brightness(1.12)" },
-  { name:"Noir",     id:"noir",   css:"grayscale(1) contrast(1.35) brightness(0.95)" },
-  { name:"Warm",     id:"warm",   css:"sepia(0.35) saturate(1.2) brightness(1.05)" },
-  { name:"Cool",     id:"cool",   css:"hue-rotate(20deg) saturate(1.15) brightness(1.02)" },
-  { name:"Chrome",   id:"chrome", css:"contrast(1.2) saturate(1.4) brightness(0.92)" },
-  { name:"Matte",    id:"matte",  css:"contrast(0.88) saturate(0.75) brightness(1.08)" },
-  { name:"Retro",    id:"retro",  css:"sepia(0.5) saturate(1.3) contrast(1.05)" },
-  { name:"Lomo",     id:"lomo",   css:"saturate(1.6) contrast(1.25) brightness(0.88)" },
-  { name:"Analog",   id:"analog", css:"sepia(0.2) saturate(1.1) contrast(1.05) brightness(1.02)" },
-  { name:"Cinema",   id:"cinema", css:"contrast(1.25) saturate(0.85) brightness(0.93)" },
-];
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 7. DATOS — HERRAMIENTAS
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-export const TOOLS = [
-  { id:"select", icon:"⬚", label:"Selección",       cursor:"default"   },
-  { id:"crop",   icon:"✂",  label:"Cortar",          cursor:"crosshair" },
-  { id:"rmbg",   icon:"🪄", label:"Quitar fondo IA", cursor:"cell"      },
-  { id:"brush",  icon:"✏",  label:"Pincel borrar",   cursor:"cell"      },
-  { id:"hand",   icon:"✋", label:"Mano",            cursor:"grab"      },
-  { id:"zoom",   icon:"⊕",  label:"Zoom",            cursor:"zoom-in"   },
-  { id:"fx",     icon:"✦",  label:"Efectos",         cursor:"default"   },
-];
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 8. DATOS — PRESETS DE FORMATO
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-export const ASPECT_PRESETS = [
-  { label:"1:1",  w:1,  h:1,  tag:"Cuadrado"  },
-  { label:"16:9", w:16, h:9,  tag:"Wide HD"   },
-  { label:"4:3",  w:4,  h:3,  tag:"Clásico"   },
-  { label:"3:2",  w:3,  h:2,  tag:"DSLR"      },
-  { label:"21:9", w:21, h:9,  tag:"Cine"       },
-  { label:"9:16", w:9,  h:16, tag:"Story"      },
-  { label:"4:5",  w:4,  h:5,  tag:"Instagram"  },
-  { label:"2:3",  w:2,  h:3,  tag:"Retrato"    },
-  { label:"3:1",  w:3,  h:1,  tag:"Panorama"   },
-];
-
-export const SOCIAL_PRESETS = [
-  { label:"IG Post",  w:1080, h:1080 },
-  { label:"IG Story", w:1080, h:1920 },
-  { label:"FB Post",  w:1200, h:630  },
-  { label:"Twitter",  w:1500, h:500  },
-  { label:"YT Thumb", w:1280, h:720  },
-  { label:"LinkedIn", w:1200, h:627  },
-];
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 9. DATOS — AJUSTES (defaults y rangos)
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-export const ADJ_DEFAULTS = {
-  exposure:0, contrast:0, brightness:0, shadows:0, highlights:0,
-  saturation:0, temperature:0, tint:0, vibrance:0,
-  sharpness:0, clarity:0, noise:0, vignette:0,
-};
-
-export const ADJ_RANGES = {
-  // [ min, max, label, grupo ]
-  exposure:    [-100, 100, "Exposición",  "light"  ],
-  contrast:    [-100, 100, "Contraste",   "light"  ],
-  brightness:  [-100, 100, "Brillo",      "light"  ],
-  shadows:     [-100, 100, "Sombras",     "light"  ],
-  highlights:  [-100, 100, "Altas luces", "light"  ],
-  saturation:  [-100, 100, "Saturación",  "color"  ],
-  temperature: [-100, 100, "Temperatura", "color"  ],
-  tint:        [-100, 100, "Tinte",       "color"  ],
-  vibrance:    [-100, 100, "Vibración",   "color"  ],
-  sharpness:   [   0, 100, "Nitidez",     "detail" ],
-  clarity:     [-100, 100, "Claridad",    "detail" ],
-  noise:       [   0, 100, "Ruido",       "detail" ],
-  vignette:    [-100, 100, "Viñeta",      "detail" ],
-};
-
-export const ADJ_GROUPS = {
-  light:  ["exposure","contrast","brightness","shadows","highlights"],
-  color:  ["saturation","temperature","tint","vibrance"],
-  detail: ["sharpness","clarity","noise","vignette"],
-};
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 10. DATOS — TABS DEL PANEL
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-export const PANEL_TABS = [
-  { id:"adjust",  label:"Ajustes"  },
-  { id:"format",  label:"Formato"  },
-  { id:"filters", label:"Filtros"  },
-  { id:"export",  label:"Export"   },
-];
-
-export const OUTPUT_FORMATS = [
-  { id:"jpeg", label:"JPG", note:"Compresión alta, sin transparencia"  },
-  { id:"png",  label:"PNG", note:"Sin pérdida, soporta transparencia"  },
-  { id:"webp", label:"WebP",note:"Mejor ratio calidad/tamaño"          },
-];
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 11. TEXTOS UI (labels, placeholders, mensajes)
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-export const UI_TEXT = {
-  logo:                 "TOOLEDITOR",
-  logoAccentPart:       "EDITOR",      // parte en color acento
-  logoBasePart:         "TOOL",
-
-  dropTitle:            "ARRASTRA TU IMAGEN AQUÍ",
-  dropSub:              "o usa el botón + cargar",
-  dropBtn:              "+ cargar imagen",
-
-  btnOpen:              "📂 abrir",
-  btnUndo:              "↩ deshacer",
-  btnRedo:              "↪ rehacer",
-  btnRotateL:           "↺ −90°",
-  btnRotateR:           "↻ +90°",
-  btnFlipH:             "⇄ H",
-  btnFlipV:             "⇅ V",
-  btnCommit:            "✓ aplicar todo",
-  btnCropApply:         "✂ aplicar corte",
-  btnCropCancel:        "✕ cancelar",
-  btnLoad:              "+ cargar",
-  btnExport:            "⬇ exportar",
-
-  aiBadgeLabel:         "IA",
-  aiBannerTitle:        "Quitar fondo",
-  toleranceLabel:       "Tolerancia",
-  btnRemoveBG:          "🪄 quitar fondo con IA",
-  btnRemoveBGLoading:   "⟳ procesando...",
-  btnRestoreBG:         "↩ restaurar original",
-
-  btnApplyAdj:          "✓ aplicar y congelar",
-  btnResetAdj:          "↺ resetear ajustes",
-  btnApplyFilter:       "✓ aplicar filtro",
-  btnResize:            "↕ redimensionar",
-  btnDownload:          "⬇ descargar imagen",
-  btnCopyClipboard:     "📋 copiar al portapapeles",
-
-  sizeEstLabel:         "Tamaño estimado",
-  dimsLabel:            "Dimensiones",
-  widthLabel:           "ANCHO (px)",
-  heightLabel:          "ALTO (px)",
-  qualityLabel:         "Calidad",
-  formatLabel:          "Formato de salida",
-  aspectLabel:          "Relaciones de aspecto",
-  socialLabel:          "Redes sociales",
-  customSizeLabel:      "Tamaño personalizado",
-  filtersLabel:         "Filtros clásicos",
-
-  statTool:             "herramienta",
-  statDim:              "dimensión",
-  statZoom:             "zoom",
-  statFilter:           "filtro",
-  statHistory:          "historial",
-
-  noImage:              "sin imagen",
-  noSize:               "—",
-  noDims:               "— × —",
-};
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 12. TRANSICIONES Y ANIMACIONES
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-export const TRANSITIONS = {
-  default:      "all .15s",
-  toolBtn:      "all .15s",
-  filterThumb:  "border-color .15s",
-  tab:          "all .15s",
-  tbBtn:        "all .15s",
-};
-
-export const ANIMATIONS = {
-  // keyframe definida en <style> inyectado en el componente
-  spin: "@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }",
-};
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 13. CONSTANTES FUNCIONALES
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-export const FUNCTIONAL = {
-  zoom: {
-    step:    0.25,
-    min:     0.05,
-    max:     8,
-    default: 1,
-    fitMargin: 40,     // px de margen al hacer fit
-  },
-  quality: {
-    default: 90,
-    min:     10,
-    max:     100,
-  },
-  tolerance: {
-    default: 30,
-    min:     5,
-    max:     80,
-  },
-  crop: {
-    minSize: 10,       // px mínimos para aplicar crop
-  },
-  filterThumb: {
-    width:   60,
-    height:  46,
-  },
-  exportFileName: "tool-editor-export",
-  canvasExportQuality: 0.8,  // calidad JPEG para enviar a Claude Vision
-};
-
