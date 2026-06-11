@@ -103,10 +103,10 @@ async function callMlSync(body: Record<string, unknown>) {
 
 // ── Componente principal ──────────────────────────────────────────────────────
 
-type TabId = "ml-integraciones" | "ml-publicados" | "ml-cola" | "ml-errores" | "mp-integraciones" | "mp-pagos";
+type TabId = "ml-publicados" | "ml-cola" | "ml-errores" | "mp-pagos";
 
 export default function AdminML() {
-  const [tab,           setTab]           = useState<TabId>("ml-integraciones");
+  const [tab,           setTab]           = useState<TabId>("ml-publicados");
   const [products,      setProducts]      = useState<MLProduct[]>([]);
   const [errors,        setErrors]        = useState<any[]>([]);
   const [queue,         setQueue]         = useState<any[]>([]);
@@ -262,11 +262,9 @@ export default function AdminML() {
   // ── Tabs ────────────────────────────────────────────────────────────────────
 
   const TABS: { id: TabId; label: string; section: "ml" | "mp" }[] = [
-    { id: "ml-integraciones", label: "Integraciones",                     section: "ml" },
     { id: "ml-publicados",    label: `Publicados (${products.length})`,   section: "ml" },
     { id: "ml-cola",          label: `Cola (${queue.filter(q => q.status === "pending").length})`, section: "ml" },
     { id: "ml-errores",       label: `Errores (${errors.length})`,        section: "ml" },
-    { id: "mp-integraciones", label: "Integraciones",                     section: "mp" },
     { id: "mp-pagos",         label: `Pagos (${mpPayments.length})`,      section: "mp" },
   ];
 
@@ -347,28 +345,67 @@ export default function AdminML() {
           ))}
         </div>
 
-        {/* ── Selector de sección: ML / MP ─────────────────────────────────── */}
-        <div style={{
-          display: "flex", borderBottom: `1px solid ${T.border}`,
-        }}>
-          {/* Sección MercadoLibre */}
-          <div style={{
-            flex: 1, borderRight: `1px solid ${T.border}`,
-          }}>
+        {/* ── Cuentas conectadas + tabs ─────────────────────────────────────── */}
+        <div style={{ display: "flex", borderBottom: `1px solid ${T.border}` }}>
+
+          {/* ── MercadoLibre ── */}
+          <div style={{ flex: 1, borderRight: `1px solid ${T.border}` }}>
             <div style={{
-              padding: "0 24px",
+              padding: "12px 20px",
               background: mlTab ? T.bgMain : "transparent",
               borderBottom: mlTab ? `2px solid ${T.accent}` : "2px solid transparent",
             }}>
-              <div style={{
-                display: "flex", alignItems: "center", gap: 8,
-                padding: "10px 0 8px",
-              }}>
-                <span style={{ fontSize: 16 }}>🟡</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: mlTab ? T.accent : T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              {/* Label sección */}
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                <span style={{ fontSize: 14 }}>🟡</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: mlTab ? T.accent : T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
                   MercadoLibre
                 </span>
               </div>
+              {/* Cuentas ML siempre visibles */}
+              {credsLoading ? (
+                <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10 }}>Cargando…</div>
+              ) : mlCreds.length === 0 ? (
+                <div style={{ marginBottom: 10 }}>
+                  <button onClick={() => handleConnect("MercadoLibre", "MLU")} style={{
+                    padding: "5px 12px", background: T.accent, color: "#fff",
+                    border: "none", borderRadius: T.radiusSm, cursor: "pointer",
+                    fontWeight: 700, fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase",
+                  }}>+ Conectar cuenta</button>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
+                  {mlCreds.map(cred => {
+                    const diffMs  = new Date(cred.expiresAt).getTime() - Date.now();
+                    const diffHrs = Math.max(0, Math.floor(diffMs / 3_600_000));
+                    const diffDays = Math.floor(diffHrs / 24);
+                    const expiryLabel = cred.isExpired ? "Vencido" : diffDays > 1 ? `Vence en ${diffDays}d` : diffHrs > 0 ? `Vence en ${diffHrs}h` : "Vence pronto";
+                    const statusColor = cred.isExpired ? T.danger : cred.expiringSoon ? T.warning : T.success;
+                    const isLoading = actionLoading === `${cred.platform}_${cred.siteId}`;
+                    return (
+                      <div key={cred.id} style={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        padding: "7px 12px", borderRadius: T.radiusSm,
+                        background: T.bgCard, border: `1px solid ${T.border}`,
+                        borderLeft: `3px solid ${T.accent}`,
+                      }}>
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textDark }}>
+                            {cred.nickname || cred.siteId}
+                            {cred.isGlobal && <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, color: T.primary, background: T.primaryLight, padding: "1px 5px", borderRadius: T.radiusPill }}>Global</span>}
+                          </div>
+                          <div style={{ fontSize: 10, color: statusColor, fontWeight: 600 }}>● {expiryLabel}</div>
+                        </div>
+                        <div style={{ display: "flex", gap: 4 }}>
+                          <button onClick={() => handleRefresh(cred)} disabled={isLoading} style={{ padding: "3px 8px", fontSize: 10, fontWeight: 600, background: "transparent", border: `1px solid ${T.border}`, borderRadius: T.radiusSm, cursor: "pointer", color: T.primary }}>↺</button>
+                          <button onClick={() => handleDisconnect(cred)} disabled={isLoading} style={{ padding: "3px 8px", fontSize: 10, fontWeight: 600, background: "transparent", border: `1px solid ${T.danger}`, borderRadius: T.radiusSm, cursor: "pointer", color: T.danger }}>✕</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {/* Tabs ML */}
               <div style={{ display: "flex", gap: 0 }}>
                 {TABS.filter(t => t.section === "ml").map(t => (
                   <TabBtn key={t.id} label={t.label} active={tab === t.id}
@@ -379,22 +416,64 @@ export default function AdminML() {
             </div>
           </div>
 
-          {/* Sección MercadoPago */}
+          {/* ── MercadoPago ── */}
           <div style={{ flex: 1 }}>
             <div style={{
-              padding: "0 24px",
+              padding: "12px 20px",
               background: mpTab ? T.bgMain : "transparent",
               borderBottom: mpTab ? `2px solid #009EE3` : "2px solid transparent",
             }}>
-              <div style={{
-                display: "flex", alignItems: "center", gap: 8,
-                padding: "10px 0 8px",
-              }}>
-                <span style={{ fontSize: 16 }}>💙</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: mpTab ? "#009EE3" : T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              {/* Label sección */}
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                <span style={{ fontSize: 14 }}>💙</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: mpTab ? "#009EE3" : T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
                   MercadoPago
                 </span>
               </div>
+              {/* Cuentas MP siempre visibles */}
+              {credsLoading ? (
+                <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10 }}>Cargando…</div>
+              ) : mpCreds.length === 0 ? (
+                <div style={{ marginBottom: 10 }}>
+                  <button onClick={() => handleConnect("MercadoPago", "MLU")} style={{
+                    padding: "5px 12px", background: "#009EE3", color: "#fff",
+                    border: "none", borderRadius: T.radiusSm, cursor: "pointer",
+                    fontWeight: 700, fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase",
+                  }}>+ Conectar cuenta</button>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
+                  {mpCreds.map(cred => {
+                    const diffMs  = new Date(cred.expiresAt).getTime() - Date.now();
+                    const diffHrs = Math.max(0, Math.floor(diffMs / 3_600_000));
+                    const diffDays = Math.floor(diffHrs / 24);
+                    const expiryLabel = cred.isExpired ? "Vencido" : diffDays > 1 ? `Vence en ${diffDays}d` : diffHrs > 0 ? `Vence en ${diffHrs}h` : "Vence pronto";
+                    const statusColor = cred.isExpired ? T.danger : cred.expiringSoon ? T.warning : T.success;
+                    const isLoading = actionLoading === `${cred.platform}_${cred.siteId}`;
+                    return (
+                      <div key={cred.id} style={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        padding: "7px 12px", borderRadius: T.radiusSm,
+                        background: T.bgCard, border: `1px solid ${T.border}`,
+                        borderLeft: "3px solid #009EE3",
+                      }}>
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textDark }}>
+                            {cred.nickname || cred.siteId}
+                            {cred.isGlobal && <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, color: "#009EE3", background: "rgba(0,158,227,.1)", padding: "1px 5px", borderRadius: T.radiusPill }}>Global</span>}
+                          </div>
+                          <div style={{ fontSize: 10, color: statusColor, fontWeight: 600 }}>● {expiryLabel}</div>
+                        </div>
+                        <div style={{ display: "flex", gap: 4 }}>
+                          <button onClick={() => handleRefresh(cred)} disabled={isLoading} style={{ padding: "3px 8px", fontSize: 10, fontWeight: 600, background: "transparent", border: `1px solid ${T.border}`, borderRadius: T.radiusSm, cursor: "pointer", color: "#009EE3" }}>↺</button>
+                          <button onClick={() => handleDisconnect(cred)} disabled={isLoading} style={{ padding: "3px 8px", fontSize: 10, fontWeight: 600, background: "transparent", border: `1px solid ${T.danger}`, borderRadius: T.radiusSm, cursor: "pointer", color: T.danger }}>✕</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {/* Tabs MP */}
               <div style={{ display: "flex", gap: 0 }}>
                 {TABS.filter(t => t.section === "mp").map(t => (
                   <TabBtn key={t.id} label={t.label} active={tab === t.id}
@@ -406,42 +485,6 @@ export default function AdminML() {
           </div>
         </div>
       </div>
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          TAB: ML — INTEGRACIONES
-      ══════════════════════════════════════════════════════════════════════ */}
-      {tab === "ml-integraciones" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <SectionNote text="Cuentas MercadoLibre conectadas al vault. Las tiendas sin cuenta propia usan la cuenta global del marketplace." />
-
-          {credsLoading ? <LoadingRow /> : (
-            <>
-              {mlCreds.length > 0
-                ? mlCreds.map(cred => (
-                    <CredCard key={cred.id} cred={cred}
-                      loading={actionLoading === `${cred.platform}_${cred.siteId}`}
-                      onRefresh={() => handleRefresh(cred)}
-                      onDisconnect={() => handleDisconnect(cred)} />
-                  ))
-                : <EmptyCard
-                    icon="🟡" platform="MercadoLibre" siteId="MLU"
-                    onConnect={() => handleConnect("MercadoLibre", "MLU")} />
-              }
-              {/* Si hay cuenta pero quieren agregar más tiendas */}
-              {mlCreds.length > 0 && mlCreds.every(c => !c.isGlobal) && (
-                <EmptyCard icon="🟡" platform="MercadoLibre" siteId="MLU"
-                  label="Conectar cuenta global"
-                  onConnect={() => handleConnect("MercadoLibre", "MLU")} />
-              )}
-            </>
-          )}
-
-          <InfoNote
-            text="Los tokens de MercadoLibre vencen cada 6 horas y se renuevan automáticamente. Si hay problemas, usá «Renovar» para forzar la actualización."
-            color={T.primary}
-          />
-        </div>
-      )}
 
       {/* ══════════════════════════════════════════════════════════════════════
           TAB: ML — PUBLICADOS
@@ -572,67 +615,6 @@ export default function AdminML() {
                 disabled={saving === e.product_id} onClick={() => handleRetry(e.product_id)} />
             </div>
           ))}
-        </div>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          TAB: MP — INTEGRACIONES
-      ══════════════════════════════════════════════════════════════════════ */}
-      {tab === "mp-integraciones" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <SectionNote text="Cuentas MercadoPago conectadas al vault. Se usan para cobros, preferencias de pago y webhooks de pagos." />
-
-          {credsLoading ? <LoadingRow /> : (
-            <>
-              {mpCreds.length > 0
-                ? mpCreds.map(cred => (
-                    <CredCard key={cred.id} cred={cred}
-                      accentColor="#009EE3"
-                      loading={actionLoading === `${cred.platform}_${cred.siteId}`}
-                      onRefresh={() => handleRefresh(cred)}
-                      onDisconnect={() => handleDisconnect(cred)} />
-                  ))
-                : <EmptyCard
-                    icon="💙" platform="MercadoPago" siteId="MLU"
-                    accentColor="#009EE3"
-                    onConnect={() => handleConnect("MercadoPago", "MLU")} />
-              }
-            </>
-          )}
-
-          {/* Info sobre MP */}
-          <div style={{
-            background: T.bgCard, borderRadius: T.radiusMd,
-            border: `1px solid ${T.border}`, padding: "16px 20px",
-            boxShadow: T.shadowCard,
-          }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: T.textDark, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-              💙 Capacidades de MercadoPago
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              {[
-                { icon: "💳", title: "Checkout Pro", desc: "Preferencias de pago con redirect a MP" },
-                { icon: "🔔", title: "Webhooks", desc: "Notificaciones de pagos en tiempo real" },
-                { icon: "📊", title: "Reportes", desc: "Historial de cobros y liquidaciones" },
-                { icon: "🔁", title: "Devoluciones", desc: "Gestión de reembolsos desde el panel" },
-              ].map(cap => (
-                <div key={cap.title} style={{
-                  padding: "12px 14px", borderRadius: T.radiusSm,
-                  background: T.bgMain, border: `1px solid ${T.borderLight}`,
-                }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: T.textDark, marginBottom: 3 }}>
-                    {cap.icon} {cap.title}
-                  </div>
-                  <div style={{ fontSize: 11, color: T.textMuted }}>{cap.desc}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <InfoNote
-            text="Los tokens de MercadoPago duran 180 días. Si hay problemas de cobro, renová el token manualmente con el botón «Renovar»."
-            color="#009EE3"
-          />
         </div>
       )}
 
