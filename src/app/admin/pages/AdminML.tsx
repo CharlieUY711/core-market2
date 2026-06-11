@@ -351,18 +351,18 @@ export default function AdminML() {
           {/* ── MercadoLibre ── */}
           <div style={{ flex: 1, borderRight: `1px solid ${T.border}` }}>
             <div style={{
-              padding: "12px 20px",
+              padding: "14px 20px",
               background: mlTab ? T.bgMain : "transparent",
               borderBottom: mlTab ? `2px solid ${T.accent}` : "2px solid transparent",
             }}>
-              {/* Label sección */}
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                <span style={{ fontSize: 14 }}>🟡</span>
+              {/* Logo + label */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                <img src="/ML_logo.png" alt="MercadoLibre" style={{ width: 22, height: 22, objectFit: "contain" }} />
                 <span style={{ fontSize: 11, fontWeight: 700, color: mlTab ? T.accent : T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
                   MercadoLibre
                 </span>
               </div>
-              {/* Cuentas ML siempre visibles */}
+              {/* Cuenta ML sin contenedor */}
               {credsLoading ? (
                 <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10 }}>Cargando…</div>
               ) : mlCreds.length === 0 ? (
@@ -374,23 +374,18 @@ export default function AdminML() {
                   }}>+ Conectar cuenta</button>
                 </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 10 }}>
                   {mlCreds.map(cred => {
-                    const diffMs  = new Date(cred.expiresAt).getTime() - Date.now();
-                    const diffHrs = Math.max(0, Math.floor(diffMs / 3_600_000));
+                    const diffMs   = new Date(cred.expiresAt).getTime() - Date.now();
+                    const diffHrs  = Math.max(0, Math.floor(diffMs / 3_600_000));
                     const diffDays = Math.floor(diffHrs / 24);
                     const expiryLabel = cred.isExpired ? "Vencido" : diffDays > 1 ? `Vence en ${diffDays}d` : diffHrs > 0 ? `Vence en ${diffHrs}h` : "Vence pronto";
                     const statusColor = cred.isExpired ? T.danger : cred.expiringSoon ? T.warning : T.success;
-                    const isLoading = actionLoading === `${cred.platform}_${cred.siteId}`;
+                    const isLoading   = actionLoading === `${cred.platform}_${cred.siteId}`;
                     return (
-                      <div key={cred.id} style={{
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        padding: "7px 12px", borderRadius: T.radiusSm,
-                        background: T.bgCard, border: `1px solid ${T.border}`,
-                        borderLeft: `3px solid ${T.accent}`,
-                      }}>
+                      <div key={cred.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textDark }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: T.textDark }}>
                             {cred.nickname || cred.siteId}
                             {cred.isGlobal && <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, color: T.primary, background: T.primaryLight, padding: "1px 5px", borderRadius: T.radiusPill }}>Global</span>}
                           </div>
@@ -419,18 +414,18 @@ export default function AdminML() {
           {/* ── MercadoPago ── */}
           <div style={{ flex: 1 }}>
             <div style={{
-              padding: "12px 20px",
+              padding: "14px 20px",
               background: mpTab ? T.bgMain : "transparent",
               borderBottom: mpTab ? `2px solid #009EE3` : "2px solid transparent",
             }}>
-              {/* Label sección */}
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                <span style={{ fontSize: 14 }}>💙</span>
+              {/* Logo + label */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                <img src="/MP_logo.png" alt="MercadoPago" style={{ width: 22, height: 22, objectFit: "contain" }} />
                 <span style={{ fontSize: 11, fontWeight: 700, color: mpTab ? "#009EE3" : T.textMuted, textTransform: "uppercase", letterSpacing: "0.08em" }}>
                   MercadoPago
                 </span>
               </div>
-              {/* Cuentas MP siempre visibles */}
+              {/* Cuenta MP sin contenedor */}
               {credsLoading ? (
                 <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 10 }}>Cargando…</div>
               ) : mpCreds.length === 0 ? (
@@ -442,23 +437,18 @@ export default function AdminML() {
                   }}>+ Conectar cuenta</button>
                 </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 10 }}>
                   {mpCreds.map(cred => {
-                    const diffMs  = new Date(cred.expiresAt).getTime() - Date.now();
-                    const diffHrs = Math.max(0, Math.floor(diffMs / 3_600_000));
+                    const diffMs   = new Date(cred.expiresAt).getTime() - Date.now();
+                    const diffHrs  = Math.max(0, Math.floor(diffMs / 3_600_000));
                     const diffDays = Math.floor(diffHrs / 24);
                     const expiryLabel = cred.isExpired ? "Vencido" : diffDays > 1 ? `Vence en ${diffDays}d` : diffHrs > 0 ? `Vence en ${diffHrs}h` : "Vence pronto";
                     const statusColor = cred.isExpired ? T.danger : cred.expiringSoon ? T.warning : T.success;
-                    const isLoading = actionLoading === `${cred.platform}_${cred.siteId}`;
+                    const isLoading   = actionLoading === `${cred.platform}_${cred.siteId}`;
                     return (
-                      <div key={cred.id} style={{
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        padding: "7px 12px", borderRadius: T.radiusSm,
-                        background: T.bgCard, border: `1px solid ${T.border}`,
-                        borderLeft: "3px solid #009EE3",
-                      }}>
+                      <div key={cred.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: T.textDark }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: T.textDark }}>
                             {cred.nickname || cred.siteId}
                             {cred.isGlobal && <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, color: "#009EE3", background: "rgba(0,158,227,.1)", padding: "1px 5px", borderRadius: T.radiusPill }}>Global</span>}
                           </div>
