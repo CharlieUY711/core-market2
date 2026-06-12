@@ -172,6 +172,72 @@ function ToolEditorInner({ initialImage, config: userConfig, onExport, onReady, 
     image.src = src;
   }, [fitToView]);
 
+
+  // ─── render ───────────────────────────────────────────────────────────────
+  const render = useCallback((adjOverride, filterOverride) => {
+    const canvas = canvasRef.current;
+    const base   = cleanImgRef.current;
+    if (!canvas || !base) return;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.filter = "none";
+    ctx.drawImage(base, 0, 0);
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    applyPixelAdjustments(data, adjOverride ?? adj);
+    ctx.putImageData(data, 0, 0);
+    const fid = filterOverride ?? activeFilter;
+    const flt = FILTERS.find(f => f.id === fid);
+    canvas.style.filter = flt?.id !== "none" ? flt.css : "none";
+  }, [adj, activeFilter]);
+
+  useEffect(() => { render(); }, [render]);
+
+  // ─── loadImage ────────────────────────────────────────────────────────────
+  const loadImage = useCallback((file) => {
+    const url = URL.createObjectURL(file);
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const image = new Image();
+      image.onload = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        canvas.style.filter = "none";
+        canvas.width = image.width; canvas.height = image.height;
+        canvas.getContext("2d").drawImage(image, 0, 0);
+        cleanImgRef.current = image;
+        setImgEl(image);
+        setOriginalSrc(ev.target.result);
+        setFileName(file.name);
+        setCanvasDims({ w:image.width, h:image.height });
+        setOutW(image.width); setOutH(image.height);
+        resetAdj(); setActiveFilter("none");
+        fitToView(image.width, image.height);
+        histRef.current = { list:[], idx:-1 };
+        saveSnap(canvas);
+      };
+      image.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+    URL.revokeObjectURL(url);
+  }, [fitToView, saveSnap, resetAdj]);
+
+  // ─── commitToBase ─────────────────────────────────────────────────────────
+  const commitToBase = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const flt = FILTERS.find(f => f.id === activeFilter);
+    if (flt && flt.id !== "none") bakeFilterToPixels(canvas, flt.css);
+    canvas.style.filter = "none";
+    const newBase = new Image();
+    newBase.onload = () => {
+      cleanImgRef.current = newBase;
+      setImgEl(newBase);
+      setActiveFilter("none");
+      resetAdj();
+      saveSnap(canvas);
+    };
+    newBase.src = canvas.toDataURL();
+  }, [activeFilter, saveSnap, resetAdj]);
   const undo = () => {
     const h = histRef.current;
     if (h.idx <= 0) return;
